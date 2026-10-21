@@ -1,0 +1,16 @@
+name: Camera request
+description: Ask for a new camera / log profile
+labels: [camera request]
+body:
+  - type: input
+    id: camera
+    attributes:
+      label: Camera and log profile
+      placeholder: e.g. DJI Mavic 3 Pro, D-Log M
+    validations:
+      required: true
+  - type: textarea
+    id: links
+    attributes:
+      label: Links
+      description: A link to the manufacturer's log white paper or official LUT helps a lot.

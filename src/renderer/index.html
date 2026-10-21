@@ -1,0 +1,130 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta http-equiv="Content-Security-Policy" content="default-src 'self' lutv:; img-src 'self' lutv: data: blob:; media-src 'self' lutv: blob:; style-src 'self' 'unsafe-inline'">
+  <title>LUTviewer</title>
+  <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+  <header class="titlebar">
+    <div class="brand"><i class="mark"></i><span>LUT<b>viewer</b></span></div>
+    <div class="title-actions">
+      <button class="icon-btn" id="btnDock" title="Dock to right edge of screen (⇧⌘D)">
+        <svg viewBox="0 0 20 20"><rect x="2.5" y="3.5" width="15" height="13" rx="2"/><path d="M12 3.5v13"/></svg>
+      </button>
+      <button class="icon-btn" id="btnPin" title="Keep on top of other windows">
+        <svg viewBox="0 0 20 20"><path d="M7 3h6l-1 5 3 3H5l3-3-1-5zM10 11v6"/></svg>
+      </button>
+    </div>
+  </header>
+
+  <main>
+    <!-- Preview -->
+    <section class="viewer">
+      <div class="stage" id="stage">
+        <canvas id="view"></canvas>
+        <div class="stage-badge" id="sourceBadge">Test chart</div>
+        <div class="split-handle" id="splitHandle" hidden><span>Before</span><span>After</span></div>
+        <div class="busy" id="busy" hidden><div class="spinner"></div><span id="busyText">Working…</span></div>
+      </div>
+      <div class="transport" id="transport">
+        <button class="icon-btn" id="btnPlay" title="Play / pause (Space)" disabled>
+          <svg class="i-play" viewBox="0 0 20 20"><path d="M6 4l10 6-10 6z" fill="currentColor"/></svg>
+          <svg class="i-pause" viewBox="0 0 20 20"><path d="M6 4v12M14 4v12" stroke-width="3"/></svg>
+        </button>
+        <input type="range" id="scrub" min="0" max="1000" value="0" step="1" disabled>
+        <span class="time" id="time">--:--</span>
+        <button class="icon-btn" id="btnSplit" title="Before / after split (S)">
+          <svg viewBox="0 0 20 20"><rect x="2.5" y="4.5" width="15" height="11" rx="1.5"/><path d="M10 2v16"/></svg>
+        </button>
+        <button class="icon-btn" id="btnOpen" title="Open footage (⌘O)">
+          <svg viewBox="0 0 20 20"><path d="M3 6.5V15a1.5 1.5 0 001.5 1.5h11A1.5 1.5 0 0017 15V8a1.5 1.5 0 00-1.5-1.5H10L8.5 4.5h-4A1.5 1.5 0 003 6v.5z"/></svg>
+        </button>
+      </div>
+      <div class="source-name" id="sourceName">Drop footage anywhere to preview it</div>
+    </section>
+
+    <!-- Camera conversion -->
+    <section class="panel">
+      <label class="field-label" for="camera">Camera / log profile</label>
+      <select id="camera"></select>
+      <div class="pipeline" id="pipeline"></div>
+      <div class="row">
+        <div class="seg" id="tone" role="radiogroup" aria-label="Highlight handling">
+          <button data-v="filmic" title="Gentle highlight roll-off, close to manufacturer LUTs">Filmic</button>
+          <button data-v="clip" title="Straight Rec.709 with a hard clip">Clip</button>
+        </div>
+        <div class="slider">
+          <span>Exposure</span>
+          <input type="range" id="exposure" min="-3" max="3" step="0.1" value="0">
+          <output id="exposureOut">0.0</output>
+        </div>
+      </div>
+      <details class="advanced">
+        <summary>Advanced</summary>
+        <label class="check"><input type="checkbox" id="fullRange"> Footage uses full data levels (0–1023)</label>
+        <p class="hint">Leave off for normal camera files. Turn on if blacks look lifted and log contrast looks wrong.</p>
+      </details>
+    </section>
+
+    <!-- Active LUT -->
+    <section class="panel active-lut">
+      <div class="active-head">
+        <button class="icon-btn" id="btnPrev" title="Previous LUT (↑)"><svg viewBox="0 0 20 20"><path d="M12 5l-5 5 5 5"/></svg></button>
+        <div class="active-name">
+          <div class="field-label">Previewing</div>
+          <div id="activeName">No LUT</div>
+        </div>
+        <button class="icon-btn" id="btnFav" title="Favorite (F)"><svg viewBox="0 0 20 20"><path d="M10 2.8l2.2 4.6 5 .6-3.7 3.4 1 5-4.5-2.5-4.5 2.5 1-5L2.8 8l5-.6z"/></svg></button>
+        <button class="icon-btn" id="btnNext" title="Next LUT (↓)"><svg viewBox="0 0 20 20"><path d="M8 5l5 5-5 5"/></svg></button>
+      </div>
+      <div class="row">
+        <div class="seg small" id="lutInput" role="radiogroup" aria-label="LUT input">
+          <button data-v="rec709" title="Creative look built for Rec.709 footage. LUTviewer converts your log footage first.">Look (709 in)</button>
+          <button data-v="log" title="Camera / conversion LUT that expects log footage directly">Log in</button>
+        </div>
+        <div class="slider">
+          <span>Mix</span>
+          <input type="range" id="intensity" min="0" max="100" step="1" value="100">
+          <output id="intensityOut">100%</output>
+        </div>
+      </div>
+    </section>
+
+    <!-- Library -->
+    <section class="library" id="library">
+      <div class="lib-head">
+        <h2>LUTs <span id="lutCount">0</span></h2>
+        <div class="lib-tools">
+          <input type="search" id="search" placeholder="Search" spellcheck="false">
+          <button class="icon-btn" id="btnFavFilter" title="Show favorites only"><svg viewBox="0 0 20 20"><path d="M10 2.8l2.2 4.6 5 .6-3.7 3.4 1 5-4.5-2.5-4.5 2.5 1-5L2.8 8l5-.6z"/></svg></button>
+          <button class="icon-btn" id="btnAddLuts" title="Add LUTs (⇧⌘L)"><svg viewBox="0 0 20 20"><path d="M10 4v12M4 10h12"/></svg></button>
+        </div>
+      </div>
+      <div class="grid" id="grid"></div>
+      <div class="lib-empty" id="libEmpty" hidden>
+        <div class="drop-icon"><svg viewBox="0 0 48 48"><rect x="6" y="10" width="36" height="28" rx="4"/><path d="M24 17v14M17 24l7 7 7-7"/></svg></div>
+        <h3>Drag your LUTs in</h3>
+        <p>Drop <b>.cube</b> or <b>.3dl</b> files, or whole folders of LUT packs. They're copied into LUTviewer's library, so you only have to do this once.</p>
+        <button class="btn" id="btnAddLuts2">Choose LUTs…</button>
+      </div>
+    </section>
+  </main>
+
+  <div class="drop-overlay" id="dropOverlay" hidden><div>Drop footage or LUTs</div></div>
+  <div class="toast" id="toast" hidden></div>
+  <div class="menu" id="cardMenu" hidden>
+    <button data-act="fav">Favorite</button>
+    <button data-act="input">Mark as Log-input LUT</button>
+    <button data-act="rename">Rename…</button>
+    <button data-act="remove" class="danger">Remove from library</button>
+  </div>
+
+  <script src="colorscience.js"></script>
+  <script src="lut.js"></script>
+  <script src="gl.js"></script>
+  <script src="testchart.js"></script>
+  <script src="app.js"></script>
+</body>
+</html>

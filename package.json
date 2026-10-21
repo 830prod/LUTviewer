@@ -1,0 +1,119 @@
+{
+  "name": "lutviewer",
+  "productName": "LUTviewer",
+  "version": "1.0.0",
+  "description": "830 Productions LUTviewer: preview every LUT in your library on your footage, with camera log to Rec.709 conversion.",
+  "author": "830 Productions",
+  "license": "MIT",
+  "homepage": "https://github.com/830prod/LUTviewer",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/830prod/LUTviewer.git"
+  },
+  "bugs": {
+    "url": "https://github.com/830prod/LUTviewer/issues"
+  },
+  "keywords": [
+    "lut",
+    "color-grading",
+    "log",
+    "rec709",
+    "cube",
+    "video",
+    "macos",
+    "electron"
+  ],
+  "main": "src/main.js",
+  "scripts": {
+    "start": "electron .",
+    "test": "node scripts/test-color.mjs",
+    "dist": "electron-builder --mac --universal",
+    "dist:arm64": "electron-builder --mac --arm64"
+  },
+  "devDependencies": {
+    "electron": "^33.2.0",
+    "electron-builder": "^25.1.8"
+  },
+  "build": {
+    "appId": "com.830productions.lutviewer",
+    "productName": "LUTviewer",
+    "copyright": "Copyright © 2026 830 Productions",
+    "directories": {
+      "output": "dist",
+      "buildResources": "build"
+    },
+    "files": [
+      "src/**/*",
+      "assets/**/*",
+      "package.json"
+    ],
+    "mac": {
+      "category": "public.app-category.video",
+      "icon": "build/icon.icns",
+      "identity": null,
+      "hardenedRuntime": false,
+      "target": [
+        "dmg"
+      ],
+      "artifactName": "LUTviewer.dmg"
+    },
+    "afterPack": "scripts/after-pack.js",
+    "dmg": {
+      "title": "LUTviewer",
+      "background": "build/dmg-background.png",
+      "iconSize": 110,
+      "window": {
+        "width": 640,
+        "height": 400
+      },
+      "contents": [
+        {
+          "x": 170,
+          "y": 200,
+          "type": "file"
+        },
+        {
+          "x": 470,
+          "y": 200,
+          "type": "link",
+          "path": "/Applications"
+        }
+      ]
+    },
+    "fileAssociations": [
+      {
+        "ext": [
+          "mp4",
+          "mov",
+          "m4v",
+          "mkv",
+          "webm",
+          "mxf"
+        ],
+        "name": "Video",
+        "role": "Viewer"
+      },
+      {
+        "ext": [
+          "jpg",
+          "jpeg",
+          "png",
+          "tif",
+          "tiff",
+          "heic",
+          "webp"
+        ],
+        "name": "Image",
+        "role": "Viewer"
+      },
+      {
+        "ext": [
+          "cube",
+          "3dl"
+        ],
+        "name": "LUT",
+        "role": "Viewer"
+      }
+    ]
+  }
+}

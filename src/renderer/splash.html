@@ -1,0 +1,48 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta http-equiv="Content-Security-Policy" content="default-src 'self' lutv:; style-src 'self' 'unsafe-inline'">
+  <title>LUTviewer</title>
+  <style>
+    html, body { margin: 0; height: 100%; background: transparent; overflow: hidden; -webkit-user-select: none; cursor: default; }
+    .card {
+      position: absolute; inset: 0; border-radius: 14px; overflow: hidden;
+      background: #021C30 url(lutv://assets/splash-bg.png) center / cover;
+      -webkit-app-region: drag; font-family: -apple-system, BlinkMacSystemFont, "SF Pro Display", sans-serif;
+      box-shadow: inset 0 0 0 1px rgba(233, 245, 253, 0.12);
+    }
+    video { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; opacity: 0; transition: opacity 0.6s; }
+    video.on { opacity: 1; }
+    .shade { position: absolute; inset: 0; background: linear-gradient(90deg, rgba(2, 28, 48, 0.88) 0%, rgba(2, 28, 48, 0.55) 55%, rgba(2, 28, 48, 0.1) 100%); }
+    .content { position: absolute; left: 36px; top: 0; bottom: 0; display: flex; flex-direction: column; justify-content: center; color: #E9F5FD; }
+    .logo {
+      width: 72px; height: 72px; margin-bottom: 18px;
+      background: url(lutv://assets/app-icon.png) center / contain no-repeat;
+      filter: drop-shadow(0 6px 14px rgba(0, 0, 0, 0.35));
+    }
+    h1 { margin: 0; font-size: 34px; font-weight: 700; letter-spacing: -0.02em; }
+    h1 span { font-weight: 300; }
+    .by { margin-top: 4px; font-size: 12px; letter-spacing: 0.22em; text-transform: uppercase; color: #9ABBD4; }
+    .bar { position: absolute; left: 36px; right: 36px; bottom: 34px; height: 3px; border-radius: 2px; background: rgba(233, 245, 253, 0.18); overflow: hidden; }
+    .bar i { display: block; height: 100%; width: 4%; background: #E9F5FD; transition: width 0.25s ease; }
+    .status { position: absolute; left: 36px; bottom: 46px; font-size: 11px; color: #9ABBD4; font-variant-numeric: tabular-nums; }
+    .ver { position: absolute; right: 36px; bottom: 46px; font-size: 11px; color: rgba(233, 245, 253, 0.5); }
+  </style>
+</head>
+<body>
+  <div class="card">
+    <video id="loop" src="lutv://assets/bg-loop.mp4" autoplay muted loop playsinline></video>
+    <div class="shade"></div>
+    <div class="content">
+      <div class="logo"></div>
+      <h1>LUT<span>viewer</span></h1>
+      <div class="by">830 Productions</div>
+    </div>
+    <div class="status" id="status">Starting…</div>
+    <div class="ver">v1.0</div>
+    <div class="bar"><i id="bar"></i></div>
+  </div>
+  <script src="splash.js"></script>
+</body>
+</html>

@@ -1,0 +1,26 @@
+name: Bug report
+description: Something isn't working right
+labels: [bug]
+body:
+  - type: textarea
+    id: what
+    attributes:
+      label: What happened?
+      description: What did you do, what did you expect, and what happened instead?
+    validations:
+      required: true
+  - type: input
+    id: camera
+    attributes:
+      label: Camera / log profile
+      placeholder: e.g. Sony FX3, S-Log3 / S-Gamut3.Cine
+  - type: input
+    id: footage
+    attributes:
+      label: Footage format
+      placeholder: e.g. 10-bit HEVC .mp4, ProRes 422 HQ .mov
+  - type: input
+    id: mac
+    attributes:
+      label: Mac and macOS version
+      placeholder: e.g. MacBook Pro M3, macOS 26
