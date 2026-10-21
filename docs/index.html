@@ -1,0 +1,308 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>LUTviewer by 830 Productions: preview every LUT on your footage</title>
+  <meta name="description" content="LUTviewer is a free, open-source Mac app that shows every LUT in your library on your own footage, with built-in camera log to Rec.709 conversion.">
+  <meta name="theme-color" content="#021C30">
+  <link rel="icon" type="image/png" href="icon.png">
+  <link rel="apple-touch-icon" href="icon.png">
+  <meta property="og:type" content="website">
+  <meta property="og:title" content="LUTviewer by 830 Productions">
+  <meta property="og:description" content="See every LUT on your footage before you commit to one. Free Mac app with built-in log → Rec.709.">
+  <meta property="og:image" content="https://830prod.github.io/LUTviewer/hero.png">
+  <meta property="og:url" content="https://830prod.github.io/LUTviewer/">
+  <meta name="twitter:card" content="summary_large_image">
+  <style>
+    :root {
+      --ink-0: #021C30; --ink-1: #0A2A42; --ink-2: #14374F; --ink-3: #2F5E7E;
+      --steel: #5D89A8; --mist: #9ABBD4; --ice: #E9F5FD;
+      --line: rgba(154, 187, 212, 0.16); --muted: rgba(233, 245, 253, 0.68);
+      --max: 1140px;
+    }
+    * { box-sizing: border-box; }
+    html { scroll-behavior: smooth; }
+    body {
+      margin: 0; background: var(--ink-0); color: var(--ice);
+      font: 17px/1.6 -apple-system, BlinkMacSystemFont, "SF Pro Text", "Inter", "Segoe UI", sans-serif;
+      -webkit-font-smoothing: antialiased;
+    }
+    a { color: inherit; }
+    img { max-width: 100%; display: block; }
+    .wrap { max-width: var(--max); margin: 0 auto; padding: 0 24px; }
+
+    /* Nav */
+    nav { position: absolute; top: 0; left: 0; right: 0; z-index: 5; }
+    nav .wrap { display: flex; align-items: center; justify-content: space-between; height: 72px; }
+    .brand { display: flex; align-items: center; gap: 10px; text-decoration: none; font-size: 18px; letter-spacing: -0.01em; }
+    .brand img { width: 30px; height: 30px; }
+    .brand b { font-weight: 700; } .brand span { font-weight: 300; }
+    .nav-links { display: flex; gap: 26px; align-items: center; font-size: 15px; }
+    .nav-links a { text-decoration: none; color: var(--muted); }
+    .nav-links a:hover { color: var(--ice); }
+    .gh-icon { width: 20px; height: 20px; fill: currentColor; }
+
+    /* Hero */
+    .hero { position: relative; overflow: hidden; min-height: 760px; display: flex; align-items: center; padding: 120px 0 80px; }
+    .hero video, .hero .poster { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; }
+    .hero .poster { background: url(stripes.png) center / cover; }
+    .hero::after { content: ""; position: absolute; inset: 0; background: linear-gradient(90deg, rgba(2,28,48,.94) 0%, rgba(2,28,48,.78) 45%, rgba(2,28,48,.25) 100%), linear-gradient(0deg, var(--ink-0) 0%, transparent 25%); }
+    .hero .wrap { position: relative; z-index: 2; display: grid; grid-template-columns: 1.1fr 0.9fr; gap: 48px; align-items: center; width: 100%; }
+    .eyebrow { font-size: 13px; letter-spacing: 0.28em; text-transform: uppercase; color: var(--mist); margin-bottom: 18px; }
+    h1 { font-size: clamp(44px, 6.4vw, 80px); line-height: 1.02; letter-spacing: -0.035em; margin: 0 0 22px; font-weight: 700; }
+    h1 span { font-weight: 300; }
+    .lede { font-size: clamp(19px, 2vw, 23px); line-height: 1.45; color: var(--ice); max-width: 540px; margin: 0 0 34px; }
+    .ctas { display: flex; flex-wrap: wrap; gap: 14px; align-items: center; }
+    .btn {
+      display: inline-flex; align-items: center; gap: 10px; padding: 15px 26px; border-radius: 12px;
+      font-weight: 600; font-size: 17px; text-decoration: none; transition: transform .15s, background .15s, box-shadow .15s;
+    }
+    .btn svg { width: 20px; height: 20px; fill: currentColor; }
+    .btn-primary { background: var(--ice); color: var(--ink-0); box-shadow: 0 10px 30px rgba(0,0,0,.35); }
+    .btn-primary:hover { background: #fff; transform: translateY(-1px); }
+    .btn-ghost { background: rgba(233,245,253,.08); border: 1px solid rgba(233,245,253,.25); color: var(--ice); }
+    .btn-ghost:hover { background: rgba(233,245,253,.14); }
+    .meta { margin-top: 18px; font-size: 14px; color: var(--muted); }
+    .shot { justify-self: center; position: relative; width: min(380px, 100%); }
+    .window {
+      border-radius: 16px; overflow: hidden; background: var(--ink-0);
+      box-shadow: 0 40px 90px rgba(0,0,0,.6), 0 0 0 1px rgba(233,245,253,.16);
+      aspect-ratio: 440 / 760; position: relative;
+    }
+    .window img { width: 100%; }
+    .dots { position: absolute; top: 14px; left: 14px; display: flex; gap: 7px; }
+    .dots i { width: 11px; height: 11px; border-radius: 50%; }
+
+    /* Sections */
+    section { padding: 100px 0; }
+    .section-head { text-align: center; max-width: 680px; margin: 0 auto 56px; }
+    h2 { font-size: clamp(32px, 4vw, 46px); letter-spacing: -0.025em; line-height: 1.1; margin: 0 0 14px; }
+    .section-head p { color: var(--muted); margin: 0; font-size: 19px; }
+
+    .features { display: grid; grid-template-columns: repeat(3, 1fr); gap: 18px; }
+    .card { background: var(--ink-1); border: 1px solid var(--line); border-radius: 16px; padding: 28px; }
+    .card .ic { width: 44px; height: 44px; border-radius: 11px; background: var(--ink-2); display: grid; place-items: center; margin-bottom: 18px; }
+    .card .ic svg { width: 22px; height: 22px; fill: none; stroke: var(--mist); stroke-width: 1.7; stroke-linecap: round; stroke-linejoin: round; }
+    .card h3 { margin: 0 0 8px; font-size: 19px; letter-spacing: -0.01em; }
+    .card p { margin: 0; color: var(--muted); font-size: 16px; }
+
+    .steps { display: grid; grid-template-columns: repeat(3, 1fr); gap: 18px; counter-reset: step; }
+    .step { position: relative; padding: 30px 28px; border-radius: 16px; background: linear-gradient(180deg, var(--ink-2), var(--ink-1)); border: 1px solid var(--line); }
+    .step::before { counter-increment: step; content: counter(step); display: grid; place-items: center; width: 36px; height: 36px; border-radius: 50%; background: var(--ice); color: var(--ink-0); font-weight: 700; margin-bottom: 16px; }
+    .step h3 { margin: 0 0 6px; font-size: 19px; }
+    .step p { margin: 0; color: var(--muted); font-size: 16px; }
+
+    .cams { display: flex; flex-wrap: wrap; gap: 10px; justify-content: center; max-width: 900px; margin: 0 auto; }
+    .chip { padding: 9px 16px; border-radius: 999px; background: var(--ink-1); border: 1px solid var(--line); font-size: 15px; }
+    .chip b { font-weight: 600; } .chip span { color: var(--muted); }
+
+    .split { display: grid; grid-template-columns: 1fr 1fr; gap: 56px; align-items: center; }
+    .split h2 { text-align: left; }
+    .split p { color: var(--muted); }
+    .compare { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; }
+    .compare div { background: var(--ink-1); border: 1px solid var(--line); border-radius: 14px; padding: 22px; }
+    .compare h4 { margin: 0 0 6px; font-size: 17px; }
+    .compare p { margin: 0; font-size: 15px; }
+    .tag { display: inline-block; font-size: 11px; letter-spacing: .1em; text-transform: uppercase; color: var(--ink-0); background: var(--mist); padding: 2px 8px; border-radius: 5px; margin-bottom: 10px; font-weight: 700; }
+
+    .final { text-align: center; position: relative; overflow: hidden; border-radius: 24px; padding: 80px 24px; background: url(stripes.png) center / cover; }
+    .final::before { content: ""; position: absolute; inset: 0; background: rgba(2,28,48,.62); }
+    .final > * { position: relative; }
+    .final img.icon { width: 96px; height: 96px; margin: 0 auto 22px; filter: drop-shadow(0 10px 24px rgba(0,0,0,.4)); }
+    .final .ctas { justify-content: center; }
+    .note { max-width: 640px; margin: 26px auto 0; font-size: 14px; color: var(--muted); }
+    code { font: 13px ui-monospace, SFMono-Regular, Menlo, monospace; background: rgba(2,28,48,.7); padding: 2px 7px; border-radius: 5px; color: var(--ice); }
+
+    footer { padding: 46px 0 60px; color: var(--muted); font-size: 14px; }
+    footer .wrap { display: flex; justify-content: space-between; gap: 20px; flex-wrap: wrap; align-items: center; border-top: 1px solid var(--line); padding-top: 30px; }
+    footer a { text-decoration: none; } footer a:hover { color: var(--ice); }
+    footer .links { display: flex; gap: 22px; }
+
+    @media (max-width: 900px) {
+      .hero .wrap, .split { grid-template-columns: 1fr; }
+      .shot { width: min(320px, 100%); }
+      .dots { transform: scale(.7); transform-origin: left top; top: 10px; left: 10px; }
+      .features, .steps { grid-template-columns: 1fr; }
+      .nav-links a.hide-sm { display: none; }
+      section { padding: 72px 0; }
+    }
+    @media (max-width: 520px) {
+      .compare { grid-template-columns: 1fr; }
+      .btn { width: 100%; justify-content: center; }
+    }
+    @media (prefers-reduced-motion: reduce) { .hero video { display: none; } html { scroll-behavior: auto; } }
+  </style>
+</head>
+<body>
+  <nav>
+    <div class="wrap">
+      <a class="brand" href="#"><img src="icon.png" alt=""><span class="word"><b>LUT</b><span>viewer</span></span></a>
+      <div class="nav-links">
+        <a class="hide-sm" href="#features">Features</a>
+        <a class="hide-sm" href="#cameras">Cameras</a>
+        <a class="hide-sm" href="#download">Download</a>
+        <a href="https://github.com/830prod/LUTviewer" aria-label="LUTviewer on GitHub"><svg class="gh-icon" viewBox="0 0 16 16"><path d="M8 0C3.58 0 0 3.58 0 8c0 3.54 2.29 6.53 5.47 7.59.4.07.55-.17.55-.38 0-.19-.01-.82-.01-1.49-2.01.37-2.53-.49-2.69-.94-.09-.23-.48-.94-.82-1.13-.28-.15-.68-.52-.01-.53.63-.01 1.08.58 1.23.82.72 1.21 1.87.87 2.33.66.07-.52.28-.87.51-1.07-1.78-.2-3.64-.89-3.64-3.95 0-.87.31-1.59.82-2.15-.08-.2-.36-1.02.08-2.12 0 0 .67-.21 2.2.82.64-.18 1.32-.27 2-.27.68 0 1.36.09 2 .27 1.53-1.04 2.2-.82 2.2-.82.44 1.1.16 1.92.08 2.12.51.56.82 1.27.82 2.15 0 3.07-1.87 3.75-3.65 3.95.29.25.54.73.54 1.48 0 1.07-.01 1.93-.01 2.2 0 .21.15.46.55.38A8.013 8.013 0 0016 8c0-4.42-3.58-8-8-8z"/></svg></a>
+      </div>
+    </div>
+  </nav>
+
+  <header class="hero">
+    <div class="poster"></div>
+    <video src="bg-loop.mp4" autoplay muted loop playsinline poster="stripes.png"></video>
+    <div class="wrap">
+      <div>
+        <div class="eyebrow">830 Productions</div>
+        <h1>LUT<span>viewer</span></h1>
+        <p class="lede">See every LUT on your footage before you commit to one. A free Mac app with camera log → Rec.709 built in.</p>
+        <div class="ctas">
+          <a class="btn btn-primary" href="https://github.com/830prod/LUTviewer/releases/latest/download/LUTviewer.dmg">
+            <svg viewBox="0 0 24 24"><path d="M16.37 12.6c-.02-2.3 1.88-3.4 1.97-3.46-1.07-1.57-2.74-1.78-3.33-1.8-1.42-.14-2.77.83-3.49.83-.72 0-1.83-.81-3.01-.79-1.55.02-2.98.9-3.78 2.29-1.61 2.8-.41 6.94 1.16 9.21.77 1.11 1.68 2.36 2.88 2.31 1.16-.05 1.59-.75 2.99-.75 1.4 0 1.79.75 3.01.72 1.24-.02 2.03-1.13 2.79-2.25.88-1.29 1.24-2.53 1.26-2.6-.03-.01-2.42-.93-2.45-3.71zM14.08 5.85c.64-.77 1.07-1.85.95-2.92-.92.04-2.03.61-2.69 1.38-.59.68-1.11 1.77-.97 2.82 1.02.08 2.07-.52 2.71-1.28z"/></svg>
+            Download for Mac
+          </a>
+          <a class="btn btn-ghost" href="https://github.com/830prod/LUTviewer">
+            <svg viewBox="0 0 16 16"><path d="M8 0C3.58 0 0 3.58 0 8c0 3.54 2.29 6.53 5.47 7.59.4.07.55-.17.55-.38 0-.19-.01-.82-.01-1.49-2.01.37-2.53-.49-2.69-.94-.09-.23-.48-.94-.82-1.13-.28-.15-.68-.52-.01-.53.63-.01 1.08.58 1.23.82.72 1.21 1.87.87 2.33.66.07-.52.28-.87.51-1.07-1.78-.2-3.64-.89-3.64-3.95 0-.87.31-1.59.82-2.15-.08-.2-.36-1.02.08-2.12 0 0 .67-.21 2.2.82.64-.18 1.32-.27 2-.27.68 0 1.36.09 2 .27 1.53-1.04 2.2-.82 2.2-.82.44 1.1.16 1.92.08 2.12.51.56.82 1.27.82 2.15 0 3.07-1.87 3.75-3.65 3.95.29.25.54.73.54 1.48 0 1.07-.01 1.93-.01 2.2 0 .21.15.46.55.38A8.013 8.013 0 0016 8c0-4.42-3.58-8-8-8z"/></svg>
+            View on GitHub
+          </a>
+        </div>
+        <div class="meta"><span class="ver">Version 1.0.0</span> · Free &amp; open source · Apple Silicon + Intel · macOS 11+</div>
+      </div>
+      <div class="shot">
+        <div class="window">
+          <img src="screenshot-panel.png" alt="LUTviewer panel showing a preview with a Teal & Orange LUT and a grid of LUT thumbnails">
+          <div class="dots"><i style="background:#FF5F57"></i><i style="background:#FEBC2E"></i><i style="background:#28C840"></i></div>
+        </div>
+      </div>
+    </div>
+  </header>
+
+  <main>
+    <section id="features">
+      <div class="wrap">
+        <div class="section-head">
+          <h2>Stop guessing. Start comparing.</h2>
+          <p>Drop in a clip and every LUT in your library renders on your actual frame, side by side.</p>
+        </div>
+        <div class="features">
+          <div class="card">
+            <div class="ic"><svg viewBox="0 0 24 24"><rect x="3" y="3" width="7" height="7" rx="1.5"/><rect x="14" y="3" width="7" height="7" rx="1.5"/><rect x="3" y="14" width="7" height="7" rx="1.5"/><rect x="14" y="14" width="7" height="7" rx="1.5"/></svg></div>
+            <h3>Every LUT at once</h3>
+            <p>A live thumbnail grid shows each LUT on the current frame, and it updates as you scrub.</p>
+          </div>
+          <div class="card">
+            <div class="ic"><svg viewBox="0 0 24 24"><path d="M3 17c3-1 5-9 9-9s6 8 9 9"/><path d="M3 21h18"/></svg></div>
+            <h3>Log → Rec.709 built in</h3>
+            <p>Pick your camera and LUTviewer converts log footage first, so creative looks land the way they were designed to.</p>
+          </div>
+          <div class="card">
+            <div class="ic"><svg viewBox="0 0 24 24"><rect x="3" y="4" width="18" height="16" rx="2"/><path d="M15 4v16"/></svg></div>
+            <h3>Lives on the side</h3>
+            <p>A slim panel that docks to your screen edge and can float above Premiere, Resolve or Final Cut.</p>
+          </div>
+          <div class="card">
+            <div class="ic"><svg viewBox="0 0 24 24"><path d="M12 3v12M7 10l5 5 5-5"/><path d="M4 17v2a2 2 0 002 2h12a2 2 0 002-2v-2"/></svg></div>
+            <h3>Drag &amp; drop</h3>
+            <p>Drop <code>.cube</code> / <code>.3dl</code> files or whole LUT-pack folders in once. Drop clips on the window or the Dock icon.</p>
+          </div>
+          <div class="card">
+            <div class="ic"><svg viewBox="0 0 24 24"><rect x="3" y="5" width="18" height="14" rx="2"/><path d="M12 3v18"/></svg></div>
+            <h3>Before / after split</h3>
+            <p>Wipe across the frame, blend with the mix slider, star favorites, and flip through LUTs with the arrow keys.</p>
+          </div>
+          <div class="card">
+            <div class="ic"><svg viewBox="0 0 24 24"><rect x="5" y="11" width="14" height="10" rx="2"/><path d="M8 11V8a4 4 0 018 0v3"/></svg></div>
+            <h3>Private &amp; offline</h3>
+            <p>Nothing is uploaded. Your footage and LUTs never leave your Mac. No account, no subscription.</p>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <section style="padding-top:0">
+      <div class="wrap">
+        <div class="section-head">
+          <h2>Three steps to the right look</h2>
+        </div>
+        <div class="steps">
+          <div class="step"><h3>Add your LUTs</h3><p>Drag your LUT files or folders in. You only do this once; they stay in your library.</p></div>
+          <div class="step"><h3>Pick your camera</h3><p>Choose your log profile so footage is converted to Rec.709 before the looks are applied.</p></div>
+          <div class="step"><h3>Drop in a clip</h3><p>Browse the grid, compare with the split view, and take your favorite into your editor.</p></div>
+        </div>
+      </div>
+    </section>
+
+    <section id="cameras" style="background:linear-gradient(180deg,var(--ink-0),var(--ink-1) 50%,var(--ink-0))">
+      <div class="wrap">
+        <div class="section-head">
+          <h2>Speaks your camera's log</h2>
+          <p>Conversions use each manufacturer's published log curve and color gamut math.</p>
+        </div>
+        <div class="cams">
+          <div class="chip"><b>Sony</b> <span>S-Log3 · S-Log2 · HLG</span></div>
+          <div class="chip"><b>Canon</b> <span>C-Log 3 · C-Log 2 · C-Log</span></div>
+          <div class="chip"><b>Panasonic</b> <span>V-Log</span></div>
+          <div class="chip"><b>Fujifilm</b> <span>F-Log2 · F-Log</span></div>
+          <div class="chip"><b>Nikon</b> <span>N-Log</span></div>
+          <div class="chip"><b>Blackmagic</b> <span>Film Gen 5</span></div>
+          <div class="chip"><b>ARRI</b> <span>LogC3 · LogC4</span></div>
+          <div class="chip"><b>RED</b> <span>Log3G10</span></div>
+          <div class="chip"><b>DJI</b> <span>D-Log</span></div>
+          <div class="chip"><b>Apple</b> <span>Apple Log</span></div>
+          <div class="chip"><b>GoPro</b> <span>Protune Flat</span></div>
+          <div class="chip"><b>DaVinci</b> <span>Intermediate</span></div>
+        </div>
+      </div>
+    </section>
+
+    <section>
+      <div class="wrap split">
+        <div>
+          <h2>Looks and camera LUTs, both handled</h2>
+          <p>Creative LUTs expect Rec.709. Camera conversion LUTs expect raw log. LUTviewer knows the difference, guesses from the file name, and lets you switch with one click.</p>
+          <p>Works with H.264, HEVC (8 and 10-bit) and ProRes clips, plus JPG, PNG, TIFF and HEIC stills.</p>
+        </div>
+        <div class="compare">
+          <div><span class="tag">Look</span><h4>Teal &amp; Orange, film emulations…</h4><p style="color:var(--muted)">Your log footage is converted to Rec.709 first, then the look is applied.</p></div>
+          <div><span class="tag">Log in</span><h4>SLog3_to_Rec709.cube…</h4><p style="color:var(--muted)">Applied straight to the log signal, exactly as your editor would.</p></div>
+        </div>
+      </div>
+    </section>
+
+    <section id="download" style="padding-top:20px">
+      <div class="wrap">
+        <div class="final">
+          <img class="icon" src="icon.png" alt="LUTviewer app icon">
+          <h2>Free. Open source. Made for filmmakers.</h2>
+          <p style="color:var(--ice);font-size:19px;margin:0 0 30px">One download for every Mac, Apple Silicon and Intel.</p>
+          <div class="ctas">
+            <a class="btn btn-primary" href="https://github.com/830prod/LUTviewer/releases/latest/download/LUTviewer.dmg">Download LUTviewer.dmg</a>
+            <a class="btn btn-ghost" href="https://github.com/830prod/LUTviewer/releases">All releases</a>
+          </div>
+          <p class="note">Open the DMG and drag LUTviewer into Applications. The first time, right-click the app and choose <b>Open</b>. If macOS says it's damaged, run <code>xattr -cr /Applications/LUTviewer.app</code> in Terminal once.</p>
+        </div>
+      </div>
+    </section>
+  </main>
+
+  <footer>
+    <div class="wrap">
+      <div>© 830 Productions · MIT License</div>
+      <div class="links">
+        <a href="https://github.com/830prod/LUTviewer">GitHub</a>
+        <a href="https://github.com/830prod/LUTviewer/releases">Releases</a>
+        <a href="https://github.com/830prod/LUTviewer/issues">Report an issue</a>
+      </div>
+    </div>
+  </footer>
+
+  <script>
+    // Show the current release number without hard-coding it.
+    fetch('https://api.github.com/repos/830prod/LUTviewer/releases/latest')
+      .then((r) => (r.ok ? r.json() : null))
+      .then((rel) => {
+        if (rel && rel.tag_name) document.querySelector('.ver').textContent = 'Version ' + rel.tag_name.replace(/^v/, '');
+      })
+      .catch(() => {});
+  </script>
+</body>
+</html>
