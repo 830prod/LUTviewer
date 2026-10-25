@@ -175,3 +175,22 @@ select {
 .menu button { display: block; width: 100%; text-align: left; border: 0; background: none; padding: 6px 10px; border-radius: 5px; cursor: pointer; font-size: 12px; }
 .menu button:hover { background: var(--ink-3); }
 .menu .danger { color: #FF9C8F; }
+
+/* ---------- Update banner ---------- */
+.update-bar {
+  flex: none; display: flex; align-items: center; gap: 10px; padding: 10px 12px;
+  background: linear-gradient(90deg, var(--ink-3), var(--ink-2)); border-bottom: 1px solid var(--line-strong);
+  animation: slide-down 0.3s ease;
+}
+@keyframes slide-down { from { transform: translateY(-100%); opacity: 0; } }
+.update-text { flex: 1; min-width: 0; font-size: 12px; line-height: 1.35; }
+.update-text b { display: block; font-size: 13px; }
+.update-text span { color: var(--mist); }
+.update-progress { margin-top: 6px; height: 4px; border-radius: 2px; background: rgba(233, 245, 253, 0.18); overflow: hidden; }
+.update-progress i { display: block; height: 100%; width: 0; background: var(--ice); transition: width 0.2s ease; }
+.update-progress.indeterminate i { width: 35%; animation: indeterminate 1.1s ease-in-out infinite; }
+@keyframes indeterminate { from { transform: translateX(-100%); } to { transform: translateX(300%); } }
+.update-actions { display: flex; align-items: center; gap: 4px; flex: none; }
+.btn.small { padding: 5px 12px; font-size: 12px; }
+.link-btn { border: 0; background: none; color: var(--mist); font-size: 12px; padding: 5px 6px; cursor: pointer; border-radius: 6px; }
+.link-btn:hover { color: var(--ice); background: rgba(233, 245, 253, 0.08); }

@@ -7,3 +7,5 @@ window.lutviewer.onSplashProgress(({ pct, label }) => {
   document.getElementById('bar').style.width = `${Math.max(4, Math.min(100, pct))}%`;
   if (label) document.getElementById('status').textContent = label;
 });
+
+window.lutviewer.version().then((v) => { document.querySelector('.ver').textContent = `v${v}`; });

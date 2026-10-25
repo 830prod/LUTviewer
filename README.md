@@ -48,6 +48,7 @@ Shooting log? Tell LUTviewer your camera and it converts the footage to Rec.709 
 - ↔️ **Before / after split.** Drag the wipe across the frame, or hold <kbd>\\</kbd> to see the image without the LUT.
 - ⭐ **Favorites, search, mix.** Star your go-tos, filter by name or pack, and blend a LUT with the mix slider.
 - 🎬 **ProRes friendly.** ProRes clips get a quick preview copy made automatically with macOS's built-in tools.
+- 🔄 **Automatic updates.** LUTviewer checks GitHub for new versions and updates itself in one click (LUTviewer menu → *Check for Updates…*).
 - 🔒 **Private and offline.** Nothing is uploaded. Your LUTs and footage stay on your Mac.
 
 <br clear="right">
@@ -138,6 +139,12 @@ The conversion uses each manufacturer's published log curve and color gamut math
 <summary><b>My footage looks washed out or too contrasty.</b></summary>
 
 Check that the camera / log profile matches what you shot. If blacks still look lifted, open **Advanced** and toggle **Full data levels**. Some cameras and recorders write full-range files.
+</details>
+
+<details>
+<summary><b>How do updates work?</b></summary>
+
+LUTviewer checks for a new release when it opens (and every few hours while it runs). When one is out, a banner appears at the top of the window: click **Update** and it downloads, installs and restarts itself. You can turn automatic checks off in the **LUTviewer** menu. Only version 1.0.0 needs a one-time manual download, since updates were added in 1.1.0.
 </details>
 
 <details>

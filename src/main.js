@@ -8,6 +8,7 @@ const crypto = require('node:crypto');
 const { execFile } = require('node:child_process');
 const { Readable } = require('node:stream');
 const LutParser = require('./renderer/lut.js');
+const updater = require('./updater.js');
 
 const SCHEME = 'lutv';
 const RENDERER_DIR = path.join(__dirname, 'renderer');
@@ -31,6 +32,7 @@ const CAPTURE_TO = process.env.LUTV_CAPTURE;
 let splashWin = null;
 let mainWin = null;
 let splashShownAt = 0;
+let updaterStarted = false;
 const pendingOpen = [];
 const allowedMedia = new Set();
 
@@ -178,6 +180,7 @@ function revealMain() {
     if (mainWin) { mainWin.show(); mainWin.focus(); }
     if (splashWin) splashWin.close();
     flushPendingOpen();
+    if (!updaterStarted) { updaterStarted = true; updater.schedule(); }
     if (CAPTURE_TO && mainWin) {
       setTimeout(async () => {
         const img = await mainWin.webContents.capturePage();
@@ -357,13 +360,34 @@ function registerIpc() {
 
   ipcMain.on('app:progress', (_e, info) => { if (splashWin) splashWin.webContents.send('splash:progress', info); });
   ipcMain.on('app:ready', () => revealMain());
+
+  ipcMain.handle('update:install', () => updater.install());
+  ipcMain.handle('update:skip', () => updater.skip());
+  ipcMain.handle('update:check', () => updater.check({ manual: true }));
+  ipcMain.handle('app:version', () => app.getVersion());
 }
 
 // ---------- Menu ----------
 function buildMenu() {
   const send = (ch) => () => mainWin && mainWin.webContents.send(ch);
   Menu.setApplicationMenu(Menu.buildFromTemplate([
-    { role: 'appMenu' },
+    {
+      role: 'appMenu',
+      submenu: [
+        { role: 'about' },
+        { label: 'Check for Updates…', click: () => updater.check({ manual: true }) },
+        {
+          label: 'Automatically Check for Updates', type: 'checkbox', checked: updater.autoCheckEnabled(),
+          click: (item) => updater.setAutoCheck(item.checked),
+        },
+        { type: 'separator' },
+        { role: 'services' },
+        { type: 'separator' },
+        { role: 'hide' }, { role: 'hideOthers' }, { role: 'unhide' },
+        { type: 'separator' },
+        { role: 'quit' },
+      ],
+    },
     {
       label: 'File',
       submenu: [
@@ -396,6 +420,7 @@ if (!app.isPackaged) {
 app.whenReady().then(() => {
   registerProtocol();
   registerIpc();
+  updater.init({ getWindow: () => mainWin, getSettings, saveSettings });
   buildMenu();
   createSplash();
   createMain();

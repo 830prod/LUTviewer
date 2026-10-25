@@ -19,6 +19,19 @@
     </div>
   </header>
 
+  <div class="update-bar" id="updateBar" hidden>
+    <div class="update-text">
+      <b id="updateTitle">Update available</b>
+      <span id="updateDetail"></span>
+      <div class="update-progress" id="updateProgress" hidden><i id="updateFill"></i></div>
+    </div>
+    <div class="update-actions" id="updateActions">
+      <button class="btn small" id="btnUpdateNow">Update</button>
+      <button class="link-btn" id="btnUpdateLater">Later</button>
+      <button class="link-btn" id="btnUpdateSkip" title="Don't remind me about this version">Skip</button>
+    </div>
+  </div>
+
   <main>
     <!-- Preview -->
     <section class="viewer">

@@ -633,6 +633,56 @@ document.addEventListener('drop', (e) => {
   if (paths.length) handlePaths(paths);
 });
 
+// ---------- Updates ----------
+function bindUpdates() {
+  const bar = $('updateBar');
+  const fmtMB = (b) => `${(b / 1048576).toFixed(0)} MB`;
+  const progress = (pct) => {
+    $('updateProgress').hidden = false;
+    $('updateProgress').classList.toggle('indeterminate', pct == null);
+    $('updateFill').style.width = pct == null ? '' : `${pct}%`;
+  };
+  api.update.onAvailable(({ version, current, size }) => {
+    $('updateTitle').textContent = `LUTviewer ${version} is available`;
+    $('updateDetail').textContent = `You have ${current}${size ? ` · ${fmtMB(size)} download` : ''}`;
+    $('updateActions').hidden = false;
+    $('updateProgress').hidden = true;
+    bar.hidden = false;
+  });
+  api.update.onProgress((p) => {
+    bar.hidden = false;
+    $('updateActions').hidden = true;
+    if (p.phase === 'download') {
+      $('updateDetail').textContent = p.total ? `Downloading… ${fmtMB(p.received)} of ${fmtMB(p.total)}` : 'Downloading…';
+      progress(p.total ? Math.round((p.received / p.total) * 100) : null);
+    } else if (p.phase === 'install') {
+      $('updateDetail').textContent = 'Installing…';
+      progress(null);
+    } else if (p.phase === 'restart') {
+      $('updateDetail').textContent = 'Done! Restarting LUTviewer…';
+      progress(100);
+    } else if (p.phase === 'manual') {
+      $('updateDetail').textContent = 'The installer is open. Drag LUTviewer into Applications to finish, then reopen it.';
+      $('updateProgress').hidden = true;
+      $('updateActions').hidden = false;
+      $('btnUpdateNow').hidden = true;
+      $('btnUpdateSkip').hidden = true;
+      $('btnUpdateLater').textContent = 'OK';
+    } else if (p.phase === 'error') {
+      $('updateTitle').textContent = "The update couldn't be installed automatically";
+      $('updateDetail').textContent = 'The installer was opened instead. Drag LUTviewer into Applications to finish.';
+      $('updateProgress').hidden = true;
+      $('updateActions').hidden = false;
+      $('btnUpdateNow').hidden = true;
+      $('btnUpdateSkip').hidden = true;
+      $('btnUpdateLater').textContent = 'OK';
+    }
+  });
+  $('btnUpdateNow').addEventListener('click', () => api.update.install());
+  $('btnUpdateLater').addEventListener('click', () => { bar.hidden = true; });
+  $('btnUpdateSkip').addEventListener('click', () => { api.update.skip(); bar.hidden = true; });
+}
+
 // ---------- Startup ----------
 async function start() {
   api.progress({ pct: 8, label: 'Starting color engine…' });
@@ -683,6 +733,7 @@ async function start() {
   buildGrid();
   selectLut(state.luts.some((l) => l.id === s.activeId) ? s.activeId : null);
 
+  bindUpdates();
   api.onOpenPaths(handlePaths);
   api.onMenu('open-media', chooseMedia);
   api.onMenu('add-luts', chooseLuts);
