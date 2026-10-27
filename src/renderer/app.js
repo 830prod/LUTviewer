@@ -700,8 +700,8 @@ function setExportPhase(phase) {
   $('exportForm').hidden = phase !== 'form';
   $('exportProgress').hidden = phase === 'form';
   $('btnExportGo').hidden = phase === 'running';
-  $('btnExportGo').textContent = phase === 'done' ? 'Show in Finder' : 'Export video';
-  $('btnExportCancel').textContent = phase === 'done' || phase === 'error' ? 'Done' : 'Cancel';
+  $('btnExportGo').textContent = phase === 'done' ? 'Show in Finder' : phase === 'unsaved' ? 'Save video…' : 'Export video';
+  $('btnExportCancel').textContent = phase === 'done' || phase === 'error' ? 'Done' : phase === 'unsaved' ? 'Discard' : 'Cancel';
   if (phase === 'error') $('btnExportGo').hidden = true;
 }
 
@@ -767,14 +767,9 @@ async function runExport() {
       },
     });
     exportState.controller = null;
-    $('exportStatus').textContent = 'Choose where to save…';
     const base = (src.kind === 'chart' ? 'Test chart' : src.name).replace(/\.[^.]+$/, '');
-    const saved = await api.exportVideo.save(data.buffer, `${base} - ${entry.name} before-after.mp4`);
-    if (!saved) { setExportPhase('form'); return; }
-    exportState.savedPath = saved;
-    api.settings.get().then((st) => saveSettings({ exportCount: (st.exportCount || 0) + 1 }));
-    $('exportStatus').textContent = `Saved “${saved.split('/').pop()}”`;
-    setExportPhase('done');
+    exportState.rendered = { data, name: `${base} - ${entry.name} before-after.mp4` };
+    await saveRendered();
   } catch (err) {
     exportState.controller = null;
     if (err.cancelled) { $('exportSheet').hidden = true; return; }
@@ -782,6 +777,31 @@ async function runExport() {
     $('exportStatus').textContent = `Export failed: ${err.message}`;
     setExportPhase('error');
   }
+}
+
+// Save the finished video. The render is kept, so a cancelled or failed save can be retried.
+async function saveRendered() {
+  const { data, name } = exportState.rendered;
+  $('exportStatus').textContent = 'Choose where to save…';
+  let saved;
+  try {
+    saved = await api.exportVideo.save(data.buffer, name);
+  } catch (err) {
+    console.error(err);
+    $('exportStatus').textContent = `Couldn't save the video: ${err.message.replace(/^Error invoking remote method '[^']+': (Error: )?/, '')}`;
+    setExportPhase('unsaved');
+    return;
+  }
+  if (!saved) {
+    $('exportStatus').textContent = 'Your video is ready. Save it whenever you like.';
+    setExportPhase('unsaved');
+    return;
+  }
+  exportState.savedPath = saved;
+  exportState.rendered = null;
+  api.settings.get().then((st) => saveSettings({ exportCount: (st.exportCount || 0) + 1 }));
+  $('exportStatus').textContent = `Saved “${saved.split('/').pop()}”`;
+  setExportPhase('done');
 }
 
 function bindExport() {
@@ -796,6 +816,7 @@ function bindExport() {
   $('btnExportCancel').addEventListener('click', closeExport);
   $('btnExportGo').addEventListener('click', () => {
     if (exportState.phase === 'done') api.exportVideo.reveal(exportState.savedPath);
+    else if (exportState.phase === 'unsaved') saveRendered();
     else runExport();
   });
   // While the sheet is open, keep keyboard shortcuts away from the main view.

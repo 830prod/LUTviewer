@@ -5,6 +5,7 @@ const path = require('node:path');
 const fs = require('node:fs');
 const fsp = require('node:fs/promises');
 const crypto = require('node:crypto');
+const os = require('node:os');
 const { execFile } = require('node:child_process');
 const { Readable } = require('node:stream');
 const LutParser = require('./renderer/lut.js');
@@ -146,6 +147,25 @@ async function sendRating(stars) {
   } catch {
     return false;
   }
+}
+
+// Where the export save dialog starts. Electron's getPath('movies') can throw on some Macs
+// even when ~/Movies exists, so fall back through the usual folders.
+function exportFolder() {
+  const home = os.homedir();
+  const candidates = [
+    () => app.getPath('movies'),
+    () => path.join(home, 'Movies'),
+    () => app.getPath('downloads'),
+    () => path.join(home, 'Downloads'),
+  ];
+  for (const get of candidates) {
+    try {
+      const dir = get();
+      if (dir && fs.existsSync(dir)) return dir;
+    } catch { /* try the next one */ }
+  }
+  return home;
 }
 
 // ---------- Windows ----------
@@ -430,7 +450,7 @@ function registerIpc() {
   ipcMain.handle('export:save', async (_e, data, suggested) => {
     const r = await dialog.showSaveDialog(mainWin, {
       title: 'Save before / after video',
-      defaultPath: path.join(app.getPath('movies'), suggested.replace(/[\/:*?"<>|]+/g, '-')),
+      defaultPath: path.join(exportFolder(), suggested.replace(/[\/:*?"<>|]+/g, '-')),
       filters: [{ name: 'MP4 video', extensions: ['mp4'] }],
     });
     if (r.canceled || !r.filePath) return null;
