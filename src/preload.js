@@ -49,6 +49,10 @@ contextBridge.exposeInMainWorld('lutviewer', {
   version: () => ipcRenderer.invoke('app:version'),
   rating: { send: (stars) => ipcRenderer.invoke('rating:send', stars) },
   about: { info: () => ipcRenderer.invoke('about:info'), rate: () => ipcRenderer.invoke('about:rate') },
+  lut: {
+    save: (text, name, where) => ipcRenderer.invoke('lut:save', text, name, where),
+    premiereInstalled: () => ipcRenderer.invoke('premiere:installed'),
+  },
   openUrl: (url) => ipcRenderer.invoke('shell:open-url', url),
   exportVideo: {
     save: (data, name) => ipcRenderer.invoke('export:save', data, name),

@@ -160,6 +160,54 @@
       gl.drawArrays(gl.TRIANGLE_STRIP, 0, 4);
     }
 
+    // Bake the whole pipeline (conversion, adjustments, LUT, mix) into an n³ table.
+    // Every lattice point becomes one input pixel; the result is read back in float.
+    // Returns a Float32Array of n³ RGB triplets, red varying fastest (.cube order).
+    bakeLut(p, n) {
+      const gl = this.gl;
+      if (!gl.getExtension('EXT_color_buffer_float')) throw new Error('This Mac cannot render float LUTs');
+      const W = n * n, H = n;
+      const input = new Float32Array(W * H * 4);
+      for (let b = 0; b < n; b++) for (let g = 0; g < n; g++) for (let r = 0; r < n; r++) {
+        const o = ((b * W) + g * n + r) * 4;
+        input[o] = r / (n - 1); input[o + 1] = g / (n - 1); input[o + 2] = b / (n - 1); input[o + 3] = 1;
+      }
+      gl.activeTexture(gl.TEXTURE0);
+      gl.bindTexture(gl.TEXTURE_2D, this.image);
+      gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA32F, W, H, 0, gl.RGBA, gl.FLOAT, input);
+      gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.NEAREST);
+      gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MAG_FILTER, gl.NEAREST);
+
+      const target = gl.createTexture();
+      gl.bindTexture(gl.TEXTURE_2D, target);
+      gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA32F, W, H, 0, gl.RGBA, gl.FLOAT, null);
+      gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.NEAREST);
+      gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MAG_FILTER, gl.NEAREST);
+      const fb = gl.createFramebuffer();
+      gl.bindFramebuffer(gl.FRAMEBUFFER, fb);
+      gl.framebufferTexture2D(gl.FRAMEBUFFER, gl.COLOR_ATTACHMENT0, gl.TEXTURE_2D, target, 0);
+      if (gl.checkFramebufferStatus(gl.FRAMEBUFFER) !== gl.FRAMEBUFFER_COMPLETE) throw new Error('Float render target unavailable');
+      // Sample the lattice, not the render target.
+      gl.activeTexture(gl.TEXTURE0);
+      gl.bindTexture(gl.TEXTURE_2D, this.image);
+
+      gl.viewport(0, 0, W, H);
+      this.setUniforms({ ...p, split: -1, showOriginal: false }, p.lutId, -1);
+      gl.uniform1f(this.u.uFlipY, 0); // row 0 in = row 0 out
+      gl.drawArrays(gl.TRIANGLE_STRIP, 0, 4);
+      const px = new Float32Array(W * H * 4);
+      gl.readPixels(0, 0, W, H, gl.RGBA, gl.FLOAT, px);
+
+      gl.bindFramebuffer(gl.FRAMEBUFFER, null);
+      gl.deleteFramebuffer(fb);
+      gl.deleteTexture(target);
+      const out = new Float32Array(n * n * n * 3);
+      for (let i = 0, j = 0; i < px.length; i += 4, j += 3) {
+        out[j] = px[i]; out[j + 1] = px[i + 1]; out[j + 2] = px[i + 2];
+      }
+      return out;
+    }
+
     // Render the current source through one LUT into a small ImageData.
     renderThumb(p, lutId, logInput, w, h) {
       const gl = this.gl;

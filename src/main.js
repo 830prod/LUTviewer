@@ -458,6 +458,31 @@ function registerIpc() {
     return r.filePath;
   });
   ipcMain.handle('shell:reveal', (_e, p) => shell.showItemInFolder(p));
+
+  // Baked LUTs: either into Premiere's per-user LUT folder or wherever the user picks.
+  ipcMain.handle('lut:save', async (_e, text, name, where) => {
+    const file = `${name.replace(/[\/:*?"<>|]+/g, '-').trim() || 'LUTviewer'}.cube`;
+    let target;
+    if (where === 'premiere') {
+      // Premiere lists LUTs from this folder under Lumetri Color → Basic Correction → Input LUT.
+      const dir = path.join(os.homedir(), 'Library', 'Application Support', 'Adobe', 'Common', 'LUTs', 'Input');
+      await fsp.mkdir(dir, { recursive: true });
+      target = path.join(dir, file);
+    } else {
+      const r = await dialog.showSaveDialog(mainWin, {
+        title: 'Save LUT',
+        defaultPath: path.join(os.homedir(), 'Desktop', file),
+        filters: [{ name: 'Cube LUT', extensions: ['cube'] }],
+      });
+      if (r.canceled || !r.filePath) return null;
+      target = r.filePath;
+    }
+    await fsp.writeFile(target, text);
+    return target;
+  });
+  ipcMain.handle('premiere:installed', () => {
+    try { return fs.readdirSync('/Applications').some((n) => /^Adobe Premiere Pro/.test(n)); } catch { return false; }
+  });
 }
 
 // ---------- Menu ----------
@@ -488,6 +513,7 @@ function buildMenu() {
         { label: 'Open Footage…', accelerator: 'CmdOrCtrl+O', click: send('menu:open-media') },
         { label: 'Add LUTs…', accelerator: 'CmdOrCtrl+Shift+L', click: send('menu:add-luts') },
         { label: 'Export Before / After Video…', accelerator: 'CmdOrCtrl+E', click: send('menu:export') },
+        { label: 'Send LUT to Premiere Pro…', accelerator: 'CmdOrCtrl+Shift+E', click: send('menu:bake') },
         { type: 'separator' },
         { label: 'Show LUT Library in Finder', click: () => { fs.mkdirSync(lutDir(), { recursive: true }); shell.openPath(lutDir()); } },
         { type: 'separator' },

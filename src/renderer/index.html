@@ -154,6 +154,10 @@
             <output id="intensityOut">100%</output>
           </div>
         </div>
+        <button class="send-btn" id="btnBake" title="Bake everything into one .cube for Premiere Pro (⇧⌘E)">
+          <svg viewBox="0 0 20 20"><path d="M4 10h11M11 5.5L15.5 10 11 14.5"/><rect x="2.5" y="3" width="15" height="14" rx="2.5" opacity=".0"/></svg>
+          Send to Premiere Pro
+        </button>
       </div>
     </details>
 
@@ -223,6 +227,38 @@
       <div class="sheet-actions">
         <button class="link-btn" id="btnExportCancel">Cancel</button>
         <button class="btn" id="btnExportGo">Export video</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Send to Premiere (baked LUT) -->
+  <div class="sheet-backdrop" id="bakeSheet" hidden>
+    <div class="sheet" role="dialog" aria-labelledby="bakeTitle">
+      <h3 id="bakeTitle">Send to Premiere Pro</h3>
+      <p class="sheet-sub">Bakes everything you see into one LUT you can use in Premiere's Lumetri Color.</p>
+      <div id="bakeForm">
+        <ol class="recipe" id="bakeRecipe"></ol>
+        <label class="sheet-field">
+          <span class="field-label">LUT name</span>
+          <input type="text" id="bakeName" class="text-input" spellcheck="false">
+        </label>
+        <div class="sheet-field">
+          <span class="field-label">Quality</span>
+          <div class="seg small" id="bakeSize">
+            <button data-v="33">Standard (33³)</button>
+            <button data-v="65">High (65³)</button>
+          </div>
+        </div>
+        <p class="hint-line" id="bakeLogHint" hidden>This LUT expects your <b>log</b> footage straight from the camera. It does the Rec.709 conversion itself.</p>
+      </div>
+      <div id="bakeDone" hidden>
+        <p class="bake-ok" id="bakeSaved"></p>
+        <ol class="steps-list" id="bakeSteps"></ol>
+      </div>
+      <div class="sheet-actions">
+        <button class="link-btn" id="btnBakeCancel">Cancel</button>
+        <button class="link-btn" id="btnBakeSaveAs">Save As…</button>
+        <button class="btn" id="btnBakeGo">Add to Premiere</button>
       </div>
     </div>
   </div>

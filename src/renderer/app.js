@@ -898,6 +898,152 @@ function bindExport() {
   }, true);
 }
 
+// ---------- Send to Premiere (baked LUT) ----------
+const bakeState = { phase: 'form', savedPath: null, size: '65' };
+
+// The footage pipeline, using the chosen camera even while the test chart is on screen.
+function bakeParams() {
+  return { ...renderParams(), camera: camera(), split: -1, showOriginal: false };
+}
+
+function bakeRecipe() {
+  const cam = camera();
+  const entry = activeEntry();
+  const rows = [];
+  rows.push(['Camera conversion', cam.curve === 'none' ? 'None (Rec.709 footage)' : `${cam.brand} ${CS.CURVES[cam.curve].name} → Rec.709 · ${state.tone === 'clip' ? 'Clip' : 'Filmic'}`, cam.curve !== 'none']);
+  const changes = [];
+  if (state.exposure) changes.push(`Exposure ${signed(state.exposure, 1)}`);
+  for (const [k, v] of Object.entries(state.adjust)) if (v) changes.push(`${ADJUST_LABELS[k]} ${signed(v)}`);
+  rows.push(['Adjustments', changes.length ? changes.join(', ') : 'None', changes.length > 0]);
+  const mix = Math.round(state.intensity * 100);
+  rows.push(['LUT', entry ? `${entry.name}${mix < 100 ? ` at ${mix}%` : ''}` : 'None', !!entry]);
+  return rows;
+}
+
+function setBakePhase(phase) {
+  bakeState.phase = phase;
+  $('bakeForm').hidden = phase !== 'form';
+  $('bakeDone').hidden = phase !== 'done';
+  $('btnBakeSaveAs').hidden = phase !== 'form';
+  $('btnBakeGo').textContent = phase === 'done' ? 'Show in Finder' : 'Add to Premiere';
+  $('btnBakeCancel').textContent = phase === 'done' ? 'Done' : 'Cancel';
+}
+
+function openBake() {
+  const cam = camera();
+  const entry = activeEntry();
+  const list = $('bakeRecipe');
+  list.textContent = '';
+  for (const [label, value, on] of bakeRecipe()) {
+    const li = document.createElement('li');
+    li.className = on ? '' : 'off';
+    const a = document.createElement('span'); a.textContent = label;
+    const b = document.createElement('span'); b.textContent = value;
+    li.append(a, b);
+    list.append(li);
+  }
+  const short = cam.curve === 'none' ? 'Rec709' : CS.CURVES[cam.curve].name;
+  $('bakeName').value = `LUTviewer - ${entry ? entry.name : 'Conversion'} (${short})`;
+  setSeg('bakeSize', bakeState.size);
+  $('bakeLogHint').hidden = cam.curve === 'none';
+  setBakePhase('form');
+  $('bakeSheet').hidden = false;
+  $('bakeName').focus();
+  $('bakeName').select();
+}
+
+function buildCube(name, n, data) {
+  const lines = [
+    '# Made with LUTviewer by 830 Productions',
+    ...bakeRecipe().map(([label, value]) => `# ${label}: ${value}`),
+    `TITLE "${name.replace(/"/g, "'")}"`,
+    `LUT_3D_SIZE ${n}`,
+    'DOMAIN_MIN 0.0 0.0 0.0',
+    'DOMAIN_MAX 1.0 1.0 1.0',
+  ];
+  const clamp = (v) => Math.min(1, Math.max(0, v)).toFixed(6);
+  for (let i = 0; i < data.length; i += 3) lines.push(`${clamp(data[i])} ${clamp(data[i + 1])} ${clamp(data[i + 2])}`);
+  return lines.join('\n') + '\n';
+}
+
+async function bakeAndSave(where) {
+  const name = $('bakeName').value.trim() || 'LUTviewer';
+  const n = Number(bakeState.size);
+  const entry = activeEntry();
+  const canvas = document.createElement('canvas');
+  canvas.width = canvas.height = 1;
+  const r = new LutRenderer(canvas);
+  let text;
+  try {
+    const p = bakeParams();
+    if (entry && !state.broken.has(entry.id)) {
+      r.addLut(entry.id, LutParser.parseLut(await api.library.read(entry.id), entry.file));
+    } else {
+      p.lutId = null;
+    }
+    text = buildCube(name, n, r.bakeLut(p, n));
+  } catch (err) {
+    console.error(err);
+    toast(`Couldn't build the LUT: ${err.message}`);
+    return;
+  } finally {
+    const lose = r.gl.getExtension('WEBGL_lose_context');
+    if (lose) lose.loseContext();
+  }
+  let saved;
+  try {
+    saved = await api.lut.save(text, name, where);
+  } catch (err) {
+    toast(`Couldn't save the LUT: ${err.message.replace(/^Error invoking remote method '[^']+': (Error: )?/, '')}`);
+    return;
+  }
+  if (!saved) return;
+  bakeState.savedPath = saved;
+  const file = saved.split('/').pop();
+  const lutName = file.replace(/\.cube$/, '');
+  const isLog = camera().curve !== 'none';
+  const steps = $('bakeSteps');
+  steps.textContent = '';
+  const step = (html) => { const li = document.createElement('li'); li.innerHTML = html; steps.append(li); };
+  const esc = (t) => t.replace(/[&<>"]/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]));
+  if (where === 'premiere') {
+    $('bakeSaved').textContent = `✓ Added “${lutName}” to Premiere Pro`;
+    step('If Premiere Pro is open, quit and reopen it so it finds the new LUT.');
+    step(`Select your clips, then open <b>Lumetri Color → Basic Correction → Input LUT</b> and choose <b>${esc(lutName)}</b>.`);
+  } else {
+    $('bakeSaved').textContent = `✓ Saved “${file}”`;
+    step('In Premiere Pro: <b>Lumetri Color → Basic Correction → Input LUT → Browse…</b> and pick this file.');
+    step('<span class="tip">Also works in DaVinci Resolve (LUTs folder) and Final Cut Pro (Custom LUT effect).</span>');
+  }
+  if (isLog) step('<span class="tip">Use it on the original log clips, and make sure Premiere isn\'t also converting them automatically (clip color settings → no log conversion), or the image will be converted twice.</span>');
+  step('<span class="tip">Grade on top in Lumetri as usual.</span>');
+  setBakePhase('done');
+}
+
+function bindBake() {
+  $('btnBake').addEventListener('click', openBake);
+  api.onMenu('bake', openBake);
+  $('bakeSize').addEventListener('click', (e) => {
+    const b = e.target.closest('button');
+    if (!b) return;
+    bakeState.size = b.dataset.v;
+    setSeg('bakeSize', b.dataset.v);
+    saveSettings({ bakeSize: b.dataset.v });
+  });
+  $('btnBakeCancel').addEventListener('click', () => { $('bakeSheet').hidden = true; });
+  $('btnBakeSaveAs').addEventListener('click', () => bakeAndSave('choose'));
+  $('btnBakeGo').addEventListener('click', () => {
+    if (bakeState.phase === 'done') api.exportVideo.reveal(bakeState.savedPath);
+    else bakeAndSave('premiere');
+  });
+  document.addEventListener('keydown', (e) => {
+    if ($('bakeSheet').hidden) return;
+    if (e.key === 'Escape') $('bakeSheet').hidden = true;
+    if (e.key === 'Enter' && bakeState.phase === 'form') bakeAndSave('premiere');
+    e.stopImmediatePropagation();
+  }, true);
+}
+
 // ---------- Rating prompt ----------
 const RATE_AFTER_SECONDS = 120;
 const RATE_SNOOZE_SECONDS = 30 * 60;
@@ -1028,6 +1174,8 @@ async function start() {
 
   bindUpdates();
   bindExport();
+  bindBake();
+  if (s.bakeSize) bakeState.size = String(s.bakeSize);
   bindRating(s);
   api.onOpenPaths(handlePaths);
   api.onMenu('open-media', chooseMedia);
