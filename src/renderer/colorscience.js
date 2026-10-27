@@ -220,7 +220,15 @@ uniform float uLutSize;
 uniform float uIntensity;
 uniform float uSplit;        // < 0 disables; otherwise x position of the wipe
 uniform bool  uShowOriginal;
-uniform bool  uBeforeRaw;    // "before" shows the untouched camera file instead of the Rec.709 conversion
+uniform bool  uBeforeRaw;
+// Basic adjustments, each -1..1 (0 = untouched), applied to the Rec.709 image before the LUT.
+uniform bool  uAdjust;
+uniform float uContrast;
+uniform float uHighlights;
+uniform float uShadows;
+uniform float uSaturation;
+uniform float uTemp;
+uniform float uTint;    // "before" shows the untouched camera file instead of the Rec.709 conversion
 
 float log10f(float x) { return log(x) / log(10.0); }
 float toFull(float v) { return v * 876.0 / 1023.0 + 64.0 / 1023.0; }
@@ -337,6 +345,28 @@ vec3 toRec709(vec3 rgb) {
   return pow(filmic(lin), vec3(1.0 / 2.4));
 }
 
+const vec3 LUMA = vec3(0.2126, 0.7152, 0.0722);
+
+vec3 adjust(vec3 c) {
+  if (!uAdjust) return c;
+  // White balance as channel gains in linear light.
+  vec3 lin = pow(max(c, 0.0), vec3(2.4));
+  lin *= vec3(1.0 + 0.30 * uTemp + 0.05 * uTint, 1.0 - 0.22 * uTint, 1.0 - 0.30 * uTemp + 0.05 * uTint);
+  c = pow(max(lin, 0.0), vec3(1.0 / 2.4));
+  // Highlights / shadows: lift or pull the bright and dark ends separately.
+  float y = dot(c, LUMA);
+  float hw = smoothstep(0.45, 1.0, y);
+  float sw = 1.0 - smoothstep(0.0, 0.55, y);
+  c += vec3(0.30 * uHighlights * hw + 0.25 * uShadows * sw);
+  // Contrast around a mid-grey pivot.
+  float k = uContrast >= 0.0 ? 1.0 + 0.8 * uContrast : 1.0 + 0.6 * uContrast;
+  c = (c - 0.42) * k + 0.42;
+  // Saturation.
+  y = dot(c, LUMA);
+  c = mix(vec3(y), c, 1.0 + uSaturation);
+  return clamp(c, 0.0, 1.0);
+}
+
 vec3 applyLut(vec3 c) {
   c = clamp(c, 0.0, 1.0);
   vec3 coord = c * ((uLutSize - 1.0) / uLutSize) + 0.5 / uLutSize;
@@ -347,13 +377,16 @@ void main() {
   vec3 src = texture(uImage, vUv).rgb;
   if (uFullRange) src = (src * 1023.0 - 64.0) / 876.0;
   vec3 converted = toRec709(src);
-  vec3 graded = converted;
+  vec3 edited = adjust(converted);
+  vec3 graded = edited;
   bool original = uShowOriginal || (uSplit >= 0.0 && vUv.x < uSplit);
-  if (uHasLut && !original) {
-    vec3 lutIn = uLutLogInput ? src : converted;
-    graded = mix(converted, applyLut(lutIn), uIntensity);
-  } else if (original && uBeforeRaw) {
-    graded = src;
+  if (original) {
+    // "Before" is the untouched footage: no edits, no LUT.
+    graded = uBeforeRaw ? src : converted;
+  } else if (uHasLut) {
+    // Look LUTs get the edited Rec.709 image; log-input LUTs get raw log, then the edits.
+    vec3 look = uLutLogInput ? adjust(applyLut(src)) : applyLut(edited);
+    graded = mix(edited, look, uIntensity);
   }
   if (uSplit >= 0.0 && abs(vUv.x - uSplit) < 0.0015) graded = vec3(1.0);
   outColor = vec4(clamp(graded, 0.0, 1.0), 1.0);

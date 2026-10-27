@@ -138,6 +138,15 @@
       gl.uniform1f(this.u.uSplit, split);
       gl.uniform1i(this.u.uShowOriginal, p.showOriginal ? 1 : 0);
       gl.uniform1i(this.u.uBeforeRaw, p.beforeRaw ? 1 : 0);
+      const a = p.adjust || {};
+      const on = ['contrast', 'highlights', 'shadows', 'saturation', 'temperature', 'tint'].some((k) => a[k]);
+      gl.uniform1i(this.u.uAdjust, on ? 1 : 0);
+      gl.uniform1f(this.u.uContrast, a.contrast || 0);
+      gl.uniform1f(this.u.uHighlights, a.highlights || 0);
+      gl.uniform1f(this.u.uShadows, a.shadows || 0);
+      gl.uniform1f(this.u.uSaturation, a.saturation || 0);
+      gl.uniform1f(this.u.uTemp, a.temperature || 0);
+      gl.uniform1f(this.u.uTint, a.tint || 0);
       gl.uniform2f(this.u.uScale, 1, 1);
     }
 

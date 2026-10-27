@@ -62,56 +62,105 @@
     </section>
 
     <!-- Camera conversion -->
-    <section class="panel">
-      <label class="field-label" for="camera">Camera / log profile</label>
-      <select id="camera"></select>
-      <div class="pipeline" id="pipeline"></div>
-      <div class="row">
-        <div class="seg" id="tone" role="radiogroup" aria-label="Highlight handling">
-          <button data-v="filmic" title="Gentle highlight roll-off, close to manufacturer LUTs">Filmic</button>
-          <button data-v="clip" title="Straight Rec.709 with a hard clip">Clip</button>
+    <details class="panel section" data-section="camera" open>
+      <summary><span class="sec-title">Camera</span><span class="sec-meta" id="metaCamera"></span><svg class="chev" viewBox="0 0 20 20"><path d="M7 8l3 3 3-3"/></svg></summary>
+      <div class="sec-body">
+        <select id="camera" aria-label="Camera / log profile"></select>
+        <div class="pipeline" id="pipeline"></div>
+        <div class="row">
+          <span class="row-label" title="How bright highlights are handled when converting to Rec.709">Roll-off</span>
+          <div class="seg" id="tone" role="radiogroup" aria-label="Highlight handling">
+            <button data-v="filmic" title="Gentle highlight roll-off, close to manufacturer LUTs">Filmic</button>
+            <button data-v="clip" title="Straight Rec.709 with a hard clip">Clip</button>
+          </div>
         </div>
-        <div class="slider">
+        <details class="advanced">
+          <summary>Advanced</summary>
+          <label class="check"><input type="checkbox" id="fullRange"> Footage uses full data levels (0–1023)</label>
+          <p class="hint">Leave off for normal camera files. Turn on if blacks look lifted and log contrast looks wrong.</p>
+        </details>
+      </div>
+    </details>
+
+    <!-- Basic adjustments -->
+    <details class="panel section" data-section="adjust">
+      <summary><span class="sec-title">Adjust</span><span class="sec-meta" id="metaAdjust">No changes</span><svg class="chev" viewBox="0 0 20 20"><path d="M7 8l3 3 3-3"/></svg></summary>
+      <div class="sec-body">
+        <div class="adj-group-label">Light</div>
+        <div class="slider adj">
           <span>Exposure</span>
-          <input type="range" id="exposure" min="-3" max="3" step="0.1" value="0">
+          <input type="range" id="exposure" min="-3" max="3" step="0.1" value="0" data-default="0">
           <output id="exposureOut">0.0</output>
         </div>
+        <div class="slider adj">
+          <span>Contrast</span>
+          <input type="range" id="contrast" min="-100" max="100" step="1" value="0" data-default="0">
+          <output id="contrastOut">0</output>
+        </div>
+        <div class="slider adj">
+          <span>Highlights</span>
+          <input type="range" id="highlights" min="-100" max="100" step="1" value="0" data-default="0">
+          <output id="highlightsOut">0</output>
+        </div>
+        <div class="slider adj">
+          <span>Shadows</span>
+          <input type="range" id="shadows" min="-100" max="100" step="1" value="0" data-default="0">
+          <output id="shadowsOut">0</output>
+        </div>
+        <div class="adj-group-label">Color</div>
+        <div class="slider adj">
+          <span>Saturation</span>
+          <input type="range" id="saturation" min="-100" max="100" step="1" value="0" data-default="0">
+          <output id="saturationOut">0</output>
+        </div>
+        <div class="slider adj">
+          <span>Temp</span>
+          <input type="range" id="temperature" min="-100" max="100" step="1" value="0" data-default="0">
+          <output id="temperatureOut">0</output>
+        </div>
+        <div class="slider adj">
+          <span>Tint</span>
+          <input type="range" id="tint" min="-100" max="100" step="1" value="0" data-default="0">
+          <output id="tintOut">0</output>
+        </div>
+        <div class="adj-foot">
+          <span class="hint-line">Double-click a slider to reset it.</span>
+          <button class="link-btn" id="btnResetAdjust">Reset all</button>
+        </div>
       </div>
-      <details class="advanced">
-        <summary>Advanced</summary>
-        <label class="check"><input type="checkbox" id="fullRange"> Footage uses full data levels (0–1023)</label>
-        <p class="hint">Leave off for normal camera files. Turn on if blacks look lifted and log contrast looks wrong.</p>
-      </details>
-    </section>
+    </details>
 
     <!-- Active LUT -->
-    <section class="panel active-lut">
-      <div class="active-head">
-        <button class="icon-btn" id="btnPrev" title="Previous LUT (↑)"><svg viewBox="0 0 20 20"><path d="M12 5l-5 5 5 5"/></svg></button>
-        <div class="active-name">
-          <div class="field-label">Previewing</div>
-          <div id="activeName">No LUT</div>
+    <details class="panel section active-lut" data-section="lut" open>
+      <summary><span class="sec-title">LUT</span><span class="sec-meta" id="metaLut">No LUT</span><svg class="chev" viewBox="0 0 20 20"><path d="M7 8l3 3 3-3"/></svg></summary>
+      <div class="sec-body">
+        <div class="active-head">
+          <button class="icon-btn" id="btnPrev" title="Previous LUT (↑)"><svg viewBox="0 0 20 20"><path d="M12 5l-5 5 5 5"/></svg></button>
+          <div class="active-name">
+            <div class="field-label">Previewing</div>
+            <div id="activeName">No LUT</div>
+          </div>
+          <button class="icon-btn" id="btnFav" title="Favorite (F)"><svg viewBox="0 0 20 20"><path d="M10 2.8l2.2 4.6 5 .6-3.7 3.4 1 5-4.5-2.5-4.5 2.5 1-5L2.8 8l5-.6z"/></svg></button>
+          <button class="icon-btn" id="btnNext" title="Next LUT (↓)"><svg viewBox="0 0 20 20"><path d="M8 5l5 5-5 5"/></svg></button>
         </div>
-        <button class="icon-btn" id="btnFav" title="Favorite (F)"><svg viewBox="0 0 20 20"><path d="M10 2.8l2.2 4.6 5 .6-3.7 3.4 1 5-4.5-2.5-4.5 2.5 1-5L2.8 8l5-.6z"/></svg></button>
-        <button class="icon-btn" id="btnNext" title="Next LUT (↓)"><svg viewBox="0 0 20 20"><path d="M8 5l5 5-5 5"/></svg></button>
+        <div class="row">
+          <div class="seg small" id="lutInput" role="radiogroup" aria-label="LUT input">
+            <button data-v="rec709" title="Creative look built for Rec.709 footage. LUTviewer converts your log footage first.">Look (709 in)</button>
+            <button data-v="log" title="Camera / conversion LUT that expects log footage directly">Log in</button>
+          </div>
+          <div class="slider">
+            <span>Mix</span>
+            <input type="range" id="intensity" min="0" max="100" step="1" value="100">
+            <output id="intensityOut">100%</output>
+          </div>
+        </div>
       </div>
-      <div class="row">
-        <div class="seg small" id="lutInput" role="radiogroup" aria-label="LUT input">
-          <button data-v="rec709" title="Creative look built for Rec.709 footage. LUTviewer converts your log footage first.">Look (709 in)</button>
-          <button data-v="log" title="Camera / conversion LUT that expects log footage directly">Log in</button>
-        </div>
-        <div class="slider">
-          <span>Mix</span>
-          <input type="range" id="intensity" min="0" max="100" step="1" value="100">
-          <output id="intensityOut">100%</output>
-        </div>
-      </div>
-    </section>
+    </details>
 
     <!-- Library -->
-    <section class="library" id="library">
+    <details class="section library" id="library" data-section="library" open>
+      <summary class="lib-summary"><span class="sec-title">LUT Library</span><span class="sec-meta"><span id="lutCount">0</span> LUTs</span><svg class="chev" viewBox="0 0 20 20"><path d="M7 8l3 3 3-3"/></svg></summary>
       <div class="lib-head">
-        <h2>LUTs <span id="lutCount">0</span></h2>
         <div class="lib-tools">
           <input type="search" id="search" placeholder="Search" spellcheck="false">
           <button class="icon-btn" id="btnFavFilter" title="Show favorites only"><svg viewBox="0 0 20 20"><path d="M10 2.8l2.2 4.6 5 .6-3.7 3.4 1 5-4.5-2.5-4.5 2.5 1-5L2.8 8l5-.6z"/></svg></button>
@@ -125,7 +174,7 @@
         <p>Drop <b>.cube</b> or <b>.3dl</b> files, or whole folders of LUT packs. They're copied into LUTviewer's library, so you only have to do this once.</p>
         <button class="btn" id="btnAddLuts2">Choose LUTs…</button>
       </div>
-    </section>
+    </details>
   </main>
 
   <div class="drop-overlay" id="dropOverlay" hidden><div>Drop footage or LUTs</div></div>

@@ -48,6 +48,8 @@ Shooting log? Tell LUTviewer your camera and it converts the footage to Rec.709 
 - ↔️ **Before / after split.** Drag the wipe across the frame, or hold <kbd>\\</kbd> to see the image without the LUT.
 - ⭐ **Favorites, search, mix.** Star your go-tos, filter by name or pack, and blend a LUT with the mix slider.
 - 🎬 **ProRes friendly.** ProRes clips get a quick preview copy made automatically with macOS's built-in tools.
+- 🎚 **Basic adjustments.** Exposure, contrast, highlights, shadows, saturation, temperature and tint, applied before the LUT so every thumbnail shows your corrections.
+- 🗂 **Tidy panel.** Camera, Adjust, LUT and Library are collapsible sections that show a summary when closed and remember how you left them.
 - 🎬 **Before / after video export.** Turn any clip or still into a shareable MP4 with an animated wipe, split screen or side by side, plus a small LUTviewer watermark.
 - 🔄 **Automatic updates.** LUTviewer checks GitHub for new versions and updates itself in one click (LUTviewer menu → *Check for Updates…*).
 - 🔒 **Private.** Your footage and LUTs never leave your Mac. The only thing ever sent is a star rating, and only if you choose to give one.

@@ -16,6 +16,7 @@ const state = {
   cameraId: 'sony-slog3c',
   tone: 'filmic',
   exposure: 0,
+  adjust: { contrast: 0, highlights: 0, shadows: 0, saturation: 0, temperature: 0, tint: 0 }, // -100..100
   fullRange: false,
   intensity: 1,
   split: false,
@@ -65,6 +66,7 @@ function renderParams() {
     camera: effectiveCamera(),
     tone: state.tone,
     exposure: state.exposure,
+    adjust: Object.fromEntries(Object.entries(state.adjust).map(([k, v]) => [k, v / 100])),
     fullRange: state.fullRange,
     lutId: entry && !state.broken.has(entry.id) ? entry.id : null,
     lutLogInput: entry ? entry.logInput : false,
@@ -232,6 +234,7 @@ function selectLut(id, { scroll = false } = {}) {
   state.activeId = id;
   const entry = activeEntry();
   $('activeName').textContent = entry ? entry.name : 'No LUT';
+  updateSectionMeta();
   $('activeName').title = entry ? entry.name : '';
   $('btnFav').classList.toggle('on', !!(entry && entry.favorite));
   $('btnFav').disabled = !entry;
@@ -340,6 +343,7 @@ function buildCameraSelect() {
 
 function updatePipeline() {
   const cam = camera();
+  updateSectionMeta();
   const el = $('pipeline');
   el.textContent = '';
   const chip = (t) => { const i = document.createElement('i'); i.textContent = t; return i; };
@@ -352,6 +356,70 @@ function updatePipeline() {
     return;
   }
   el.append(chip(CS.CURVES[cam.curve].name), ' + ', chip(CS.GAMUTS[cam.gamut].name), ' → ', chip(`Rec.709 · ${state.tone === 'clip' ? 'Clip' : 'Filmic'}`));
+}
+
+// ---------- Sections & adjustments ----------
+const ADJUST_LABELS = { contrast: 'Contrast', highlights: 'Highlights', shadows: 'Shadows', saturation: 'Saturation', temperature: 'Temp', tint: 'Tint' };
+const signed = (v, digits = 0) => `${v > 0 ? '+' : ''}${v.toFixed(digits)}`;
+
+function updateSectionMeta() {
+  const cam = camera();
+  $('metaCamera').textContent = cam.curve === 'none' ? 'Rec.709' : `${cam.brand} · ${CS.CURVES[cam.curve].name}`;
+
+  const changes = [];
+  if (state.exposure) changes.push(`Exposure ${signed(state.exposure, 1)}`);
+  for (const [k, v] of Object.entries(state.adjust)) if (v) changes.push(`${ADJUST_LABELS[k]} ${signed(v)}`);
+  const meta = $('metaAdjust');
+  meta.textContent = !changes.length ? 'No changes' : changes.length <= 2 ? changes.join(', ') : `${changes.length} changes`;
+  meta.title = changes.join(', ');
+  meta.classList.toggle('changed', changes.length > 0);
+  $('exposure').closest('.slider').classList.toggle('changed', !!state.exposure);
+  for (const k of Object.keys(state.adjust)) $(k).closest('.slider').classList.toggle('changed', !!state.adjust[k]);
+
+  const entry = activeEntry();
+  const mix = Math.round(state.intensity * 100);
+  $('metaLut').textContent = entry ? `${entry.name}${mix < 100 ? ` · ${mix}%` : ''}` : 'No LUT';
+}
+
+function setAdjust(key, value, { save = true } = {}) {
+  state.adjust[key] = value;
+  $(key).value = value;
+  $(`${key}Out`).textContent = signed(value);
+  updateSectionMeta();
+  queueDraw();
+  clearTimeout(setAdjust.timer);
+  setAdjust.timer = setTimeout(() => {
+    refreshThumbs();
+    if (save) saveSettings({ adjust: state.adjust });
+  }, 200);
+}
+
+function bindAdjust(saved) {
+  for (const key of Object.keys(state.adjust)) {
+    const input = $(key);
+    input.addEventListener('input', () => setAdjust(key, +input.value));
+    input.addEventListener('dblclick', () => setAdjust(key, 0));
+    setAdjust(key, Number(saved?.[key]) || 0, { save: false });
+  }
+  $('btnResetAdjust').addEventListener('click', () => {
+    for (const key of Object.keys(state.adjust)) setAdjust(key, 0);
+    $('exposure').value = 0;
+    $('exposure').dispatchEvent(new Event('input'));
+  });
+}
+
+// Remember which sections are open.
+function bindSections(saved) {
+  const open = { ...(saved || {}) };
+  for (const d of document.querySelectorAll('details.section')) {
+    const key = d.dataset.section;
+    if (key in open) d.open = !!open[key];
+    d.addEventListener('toggle', () => {
+      open[key] = d.open;
+      saveSettings({ sections: open });
+      if (key === 'library' && d.open) queuePump();
+    });
+  }
 }
 
 function setSeg(id, value) {
@@ -376,6 +444,7 @@ function bindControls() {
   $('exposure').addEventListener('input', (e) => {
     state.exposure = +e.target.value;
     $('exposureOut').textContent = (state.exposure > 0 ? '+' : '') + state.exposure.toFixed(1);
+    updateSectionMeta();
     queueDraw();
     clearTimeout(bindControls.expTimer);
     bindControls.expTimer = setTimeout(() => { refreshThumbs(); saveSettings({ exposure: state.exposure }); }, 200);
@@ -389,6 +458,7 @@ function bindControls() {
   $('intensity').addEventListener('input', (e) => {
     state.intensity = +e.target.value / 100;
     $('intensityOut').textContent = `${e.target.value}%`;
+    updateSectionMeta();
     queueDraw();
   });
   $('intensity').addEventListener('change', () => saveSettings({ intensity: state.intensity }));
@@ -927,6 +997,7 @@ async function start() {
   if (CS.CAMERAS.some((c) => c.id === s.cameraId)) state.cameraId = s.cameraId;
   state.tone = s.tone || 'filmic';
   state.exposure = s.exposure || 0;
+  bindSections(s.sections);
   state.fullRange = !!s.fullRange;
   state.intensity = s.intensity ?? 1;
   state.favOnly = !!s.favOnly;
@@ -944,6 +1015,7 @@ async function start() {
   setSeg('tone', state.tone);
   $('exposure').value = state.exposure;
   $('exposureOut').textContent = (state.exposure > 0 ? '+' : '') + state.exposure.toFixed(1);
+  bindAdjust(s.adjust);
   $('fullRange').checked = state.fullRange;
   $('intensity').value = Math.round(state.intensity * 100);
   $('intensityOut').textContent = `${Math.round(state.intensity * 100)}%`;

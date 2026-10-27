@@ -1,7 +1,7 @@
 {
   "name": "lutviewer",
   "productName": "LUTviewer",
-  "version": "2.0.2",
+  "version": "2.1.0",
   "description": "830 Productions LUTviewer: preview every LUT in your library on your footage, with camera log to Rec.709 conversion.",
   "author": "830 Productions",
   "license": "MIT",

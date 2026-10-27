@@ -236,3 +236,40 @@ select {
 .stars button:hover { transform: scale(1.15); }
 .rate-links { display: flex; justify-content: center; gap: 6px; flex-wrap: wrap; }
 .rate-links .btn { padding: 6px 12px; font-size: 12px; }
+
+/* ---------- Collapsible sections ---------- */
+details.section > summary {
+  list-style: none; display: flex; align-items: center; gap: 8px; cursor: pointer; min-height: 22px;
+  -webkit-user-select: none; outline: none;
+}
+details.section > summary::-webkit-details-marker { display: none; }
+details.section > summary:focus-visible { outline: 2px solid var(--mist); outline-offset: 4px; border-radius: 4px; }
+.sec-title { font-size: 11px; font-weight: 600; letter-spacing: 0.12em; text-transform: uppercase; color: var(--mist); flex: none; }
+.sec-meta { flex: 1; min-width: 0; text-align: right; font-size: 12px; color: var(--muted); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.sec-meta.changed { color: #F4C76B; }
+.chev { width: 16px; height: 16px; flex: none; color: var(--mist); transition: transform 0.2s ease; transform: rotate(-90deg); }
+details.section[open] > summary .chev { transform: rotate(0deg); }
+details.section > summary:hover .sec-title, details.section > summary:hover .chev { color: var(--ice); }
+.panel.section { padding: 11px 12px; }
+.sec-body { margin-top: 12px; animation: sec-in 0.18s ease; }
+@keyframes sec-in { from { opacity: 0; transform: translateY(-4px); } }
+.row-label { font-size: 11px; color: var(--muted); }
+
+/* Adjust sliders */
+.slider.adj { width: 100%; min-width: 0; margin: 2px 0; }
+.slider.adj > span { width: 74px; flex: none; color: var(--ice); font-size: 12px; }
+.slider.adj output { width: 40px; }
+.slider.adj.changed > span { color: #F4C76B; }
+#temperature::-webkit-slider-runnable-track { background: linear-gradient(90deg, #5D8FD6, var(--ink-3) 50%, #E3A04F); }
+#tint::-webkit-slider-runnable-track { background: linear-gradient(90deg, #5FB872, var(--ink-3) 50%, #C26BC2); }
+.adj-group-label { font-size: 10px; letter-spacing: 0.12em; text-transform: uppercase; color: var(--muted); margin: 10px 0 4px; }
+.adj-group-label:first-child { margin-top: 0; }
+.adj-foot { display: flex; align-items: center; justify-content: space-between; margin-top: 8px; }
+.adj-foot .hint-line { margin: 0; }
+
+/* Library as a section */
+details.library { padding: 14px 12px 16px; }
+details.library > summary { padding: 0 2px; }
+details.library .lib-head { margin: 12px 0 10px; }
+details.library .lib-tools { width: 100%; }
+details.library #search { flex: 1; width: auto; }
