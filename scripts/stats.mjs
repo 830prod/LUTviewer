@@ -78,7 +78,7 @@ if (allDays.length > 14) {
 }
 
 console.log(c.dim('\nWebsite visitors & Download-button clicks: https://830lutviewer.goatcounter.com'));
-console.log(c.dim('Email sign-ups: https://buttondown.com/emails/subscribers\n'));
+console.log(c.dim('Email sign-ups: Mailchimp → Audience → All contacts (https://us7.admin.mailchimp.com/audience/)\n'));
 
 history.snapshots.push({ at: new Date().toISOString(), total, perRelease: Object.fromEntries(perRelease.map((r) => [r.tag, r.downloads])) });
 fs.mkdirSync(path.dirname(historyFile), { recursive: true });

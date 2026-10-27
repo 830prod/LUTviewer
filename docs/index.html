@@ -119,6 +119,7 @@
     .signup label { display: block; font-weight: 600; margin-bottom: 10px; text-align: center; }
     .signup label span { font-weight: 400; color: var(--muted); }
     .signup-row { display: flex; gap: 10px; }
+    .signup .fname { flex: 0.7; }
     .signup input {
       flex: 1; min-width: 0; padding: 13px 16px; border-radius: 12px; border: 1px solid rgba(233,245,253,.3);
       background: rgba(2,28,48,.65); color: var(--ice); font: inherit; font-size: 16px; outline: none;
@@ -307,10 +308,12 @@
             <a class="btn btn-ghost" href="https://github.com/830prod/LUTviewer/releases" data-goatcounter-click="all-releases">All releases</a>
           </div>
           <p class="note">Open the DMG and drag LUTviewer into Applications. The first time, right-click the app and choose <b>Open</b>. If macOS says it's damaged, run <code>xattr -cr /Applications/LUTviewer.app</code> in Terminal once.</p>
-          <form class="signup" hidden action="https://buttondown.com/api/emails/embed-subscribe/830prod" method="post" target="_blank" data-goatcounter-click="signup-bottom">
+          <form class="signup" action="https://830productions.us7.list-manage.com/subscribe/post?u=b01231c7b47a3fa57ae567f80&amp;id=142a8f8cf4&amp;f_id=00ab88e0f0" method="post" target="_blank" data-goatcounter-click="signup-bottom">
+            <div aria-hidden="true" style="position:absolute;left:-5000px"><input type="text" name="b_b01231c7b47a3fa57ae567f80_142a8f8cf4" tabindex="-1" value=""></div>
             <label for="email">Want to hear when a new version is out? <span>(optional)</span></label>
             <div class="signup-row">
-              <input type="email" name="email" id="email" placeholder="you@example.com" autocomplete="email" required>
+              <input type="text" name="FNAME" placeholder="First name" autocomplete="given-name" aria-label="First name" class="fname">
+              <input type="email" name="EMAIL" id="email" placeholder="you@example.com" autocomplete="email" required>
               <button class="btn btn-primary" type="submit">Notify me</button>
             </div>
             <small>Just update emails. No spam, unsubscribe anytime. The download never needs an email.</small>
@@ -337,9 +340,10 @@
     <div>
       <b id="thanksTitle">Thanks for downloading LUTviewer!</b>
       <p>Your download has started. Want an email when there's a new version?</p>
-      <form class="signup compact" action="https://buttondown.com/api/emails/embed-subscribe/830prod" method="post" target="_blank" data-goatcounter-click="signup-popup">
+      <form class="signup compact" action="https://830productions.us7.list-manage.com/subscribe/post?u=b01231c7b47a3fa57ae567f80&amp;id=142a8f8cf4&amp;f_id=00ab88e0f0" method="post" target="_blank" data-goatcounter-click="signup-popup">
+        <div aria-hidden="true" style="position:absolute;left:-5000px"><input type="text" name="b_b01231c7b47a3fa57ae567f80_142a8f8cf4" tabindex="-1" value=""></div>
         <div class="signup-row">
-          <input type="email" name="email" placeholder="you@example.com" autocomplete="email" required aria-label="Email address">
+          <input type="email" name="EMAIL" placeholder="you@example.com" autocomplete="email" required aria-label="Email address">
           <button class="btn btn-primary" type="submit">Notify me</button>
         </div>
       </form>
@@ -350,7 +354,7 @@
   <script>
     // After a download click, offer the (optional) update-email sign-up once.
     const thanks = document.getElementById('thanks');
-    const SIGNUP_ENABLED = false; // turn on once the Buttondown list (buttondown.com/830prod) exists
+    const SIGNUP_ENABLED = true; // update emails go to the 830 Productions Mailchimp audience
     document.querySelectorAll('[data-download]').forEach((a) => a.addEventListener('click', () => {
       if (!SIGNUP_ENABLED) return;
       try { if (localStorage.getItem('lv-signup-seen')) return; localStorage.setItem('lv-signup-seen', '1'); } catch {}
@@ -359,7 +363,7 @@
     document.getElementById('thanksClose').addEventListener('click', () => { thanks.hidden = true; });
     document.querySelectorAll('form.signup').forEach((f) => f.addEventListener('submit', () => {
       setTimeout(() => {
-        f.innerHTML = '<p class="signup-done">You\'re on the list. Check your inbox to confirm.</p>';
+        f.innerHTML = '<p class="signup-done">Almost done! Finish in the Mailchimp tab that just opened.</p>';
         if (f.closest('.thanks')) setTimeout(() => { thanks.hidden = true; }, 2500);
       }, 50);
     }));

@@ -772,6 +772,7 @@ async function runExport() {
     const saved = await api.exportVideo.save(data.buffer, `${base} - ${entry.name} before-after.mp4`);
     if (!saved) { setExportPhase('form'); return; }
     exportState.savedPath = saved;
+    api.settings.get().then((st) => saveSettings({ exportCount: (st.exportCount || 0) + 1 }));
     $('exportStatus').textContent = `Saved “${saved.split('/').pop()}”`;
     setExportPhase('done');
   } catch (err) {

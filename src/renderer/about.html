@@ -1,0 +1,102 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta http-equiv="Content-Security-Policy" content="default-src 'self' lutv:; style-src 'self' 'unsafe-inline'">
+  <title>About LUTviewer</title>
+  <style>
+    :root {
+      --ink-0: #021C30; --ink-1: #0A2A42; --ink-2: #14374F; --ink-3: #2F5E7E;
+      --mist: #9ABBD4; --ice: #E9F5FD; --line: rgba(154, 187, 212, 0.16); --muted: rgba(233, 245, 253, 0.62);
+    }
+    * { box-sizing: border-box; }
+    html, body { margin: 0; height: 100%; }
+    body {
+      background: var(--ink-0); color: var(--ice); overflow: hidden; cursor: default; -webkit-user-select: none;
+      font: 13px/1.4 -apple-system, BlinkMacSystemFont, "SF Pro Text", sans-serif; -webkit-font-smoothing: antialiased;
+    }
+    .drag { position: fixed; top: 0; left: 0; right: 0; height: 40px; -webkit-app-region: drag; z-index: 5; }
+
+    .hero { position: relative; height: 262px; overflow: hidden; display: flex; flex-direction: column; align-items: center; justify-content: flex-end; padding-bottom: 20px; }
+    .hero video, .hero .bg { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; transition: filter .8s ease; }
+    .hero .bg { background: url(lutv://assets/splash-bg.png) center / cover; }
+    .hero::after { content: ""; position: absolute; inset: 0; background: linear-gradient(180deg, rgba(2,28,48,.25) 0%, rgba(2,28,48,.35) 45%, var(--ink-0) 100%); }
+    .hero > :not(video):not(.bg) { position: relative; z-index: 2; }
+
+    .icon-wrap { position: relative; width: 104px; height: 104px; margin-bottom: 14px; cursor: pointer; animation: float 5s ease-in-out infinite; }
+    .icon-wrap::before { content: ""; position: absolute; inset: 8px; border-radius: 26px; background: #9ABBD4; filter: blur(26px); opacity: .55; }
+    .icon-wrap img { position: relative; width: 100%; height: 100%; filter: drop-shadow(0 10px 20px rgba(0,0,0,.45)); transition: transform .35s cubic-bezier(.3,1.6,.5,1); }
+    .icon-wrap:active img { transform: scale(.92); }
+    @keyframes float { 0%, 100% { transform: translateY(0); } 50% { transform: translateY(-5px); } }
+
+    h1 { margin: 0; font-size: 30px; letter-spacing: -0.02em; font-weight: 700; }
+    h1 span { font-weight: 300; }
+    .by { margin-top: 2px; font-size: 10px; letter-spacing: .3em; text-transform: uppercase; color: var(--mist); }
+    .chips { display: flex; gap: 6px; margin-top: 10px; }
+    .chip { font-size: 11px; padding: 2px 9px; border-radius: 999px; background: rgba(233,245,253,.1); border: 1px solid rgba(233,245,253,.16); color: var(--ice); font-variant-numeric: tabular-nums; }
+    .look { position: absolute; top: 46px; right: 14px; z-index: 3; font-size: 10px; letter-spacing: .14em; text-transform: uppercase; padding: 3px 9px; border-radius: 999px; background: rgba(2,28,48,.6); color: var(--mist); opacity: 0; transition: opacity .3s; }
+    .look.show { opacity: 1; }
+
+    .body { padding: 6px 20px 0; }
+    .tagline { text-align: center; color: var(--muted); margin: 0 0 16px; font-size: 13px; text-wrap: balance; }
+    .stats { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; margin-bottom: 16px; }
+    .stat { background: var(--ink-1); border: 1px solid var(--line); border-radius: 10px; padding: 10px 6px 9px; text-align: center; }
+    .stat b { display: block; font-size: 20px; font-weight: 700; letter-spacing: -0.02em; font-variant-numeric: tabular-nums; }
+    .stat span { font-size: 10px; color: var(--muted); letter-spacing: .04em; }
+
+    .actions { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
+    .act {
+      display: flex; align-items: center; gap: 8px; padding: 9px 11px; border-radius: 9px; border: 1px solid var(--line);
+      background: var(--ink-1); color: var(--ice); font: inherit; font-size: 12px; cursor: pointer; text-align: left;
+    }
+    .act:hover { background: var(--ink-2); border-color: rgba(154,187,212,.32); }
+    .act svg { width: 16px; height: 16px; flex: none; fill: none; stroke: var(--mist); stroke-width: 1.6; stroke-linecap: round; stroke-linejoin: round; }
+    .act.primary { background: var(--ice); color: var(--ink-0); border-color: transparent; font-weight: 600; }
+    .act.primary svg { stroke: var(--ink-0); }
+    .act.primary:hover { background: #fff; }
+
+    footer { position: absolute; left: 0; right: 0; bottom: 14px; text-align: center; font-size: 10.5px; color: var(--muted); line-height: 1.6; }
+    footer b { color: var(--ice); font-weight: 600; }
+    footer .tech { opacity: .7; }
+  </style>
+</head>
+<body>
+  <div class="drag"></div>
+  <div class="look" id="look"></div>
+
+  <section class="hero">
+    <div class="bg"></div>
+    <video id="loop" src="lutv://assets/bg-loop.mp4" autoplay muted loop playsinline></video>
+    <div class="icon-wrap" id="icon" title="Click me"><img src="lutv://assets/app-icon.png" alt="LUTviewer"></div>
+    <h1>LUT<span>viewer</span></h1>
+    <div class="by">830 Productions</div>
+    <div class="chips">
+      <span class="chip" id="ver">Version –</span>
+      <span class="chip" id="arch">Universal</span>
+    </div>
+  </section>
+
+  <div class="body">
+    <p class="tagline">See every LUT on your footage before you commit to one.</p>
+    <div class="stats">
+      <div class="stat"><b id="sLuts">0</b><span>LUTs in library</span></div>
+      <div class="stat"><b id="sExports">0</b><span>Videos exported</span></div>
+      <div class="stat"><b id="sTime">0m</b><span>Spent comparing</span></div>
+    </div>
+    <div class="actions">
+      <button class="act primary" id="aRate"><svg viewBox="0 0 20 20"><path d="M10 2.8l2.2 4.6 5 .6-3.7 3.4 1 5-4.5-2.5-4.5 2.5 1-5L2.8 8l5-.6z"/></svg>Rate LUTviewer</button>
+      <button class="act" id="aUpdate"><svg viewBox="0 0 20 20"><path d="M16 10a6 6 0 11-1.8-4.3M16 3.5v3.2h-3.2"/></svg>Check for updates</button>
+      <button class="act" id="aSite"><svg viewBox="0 0 20 20"><circle cx="10" cy="10" r="7"/><path d="M3 10h14M10 3c2 2.2 2.8 4.5 2.8 7s-.8 4.8-2.8 7c-2-2.2-2.8-4.5-2.8-7S8 5.2 10 3z"/></svg>Website</button>
+      <button class="act" id="aGitHub"><svg viewBox="0 0 20 20"><path d="M7.5 16c-3.5 1-3.5-1.8-5-2.2M12.5 18v-2.8c0-.8.1-1.4-.4-1.9 2.2-.3 4.4-1 4.4-4.7a3.6 3.6 0 00-1-2.6 3.4 3.4 0 00-.1-2.5s-.8-.3-2.7 1a9.3 9.3 0 00-4.9 0C5.9 3.2 5.1 3.5 5.1 3.5a3.4 3.4 0 00-.1 2.5 3.6 3.6 0 00-1 2.6c0 3.7 2.2 4.4 4.4 4.7-.5.5-.5 1.1-.4 1.9V18"/></svg>GitHub</button>
+    </div>
+  </div>
+
+  <footer>
+    Made with care by <b>830 Productions</b><br>
+    © <span id="year">2026</span> · Free &amp; open source under the MIT License<br>
+    <span class="tech" id="tech"></span>
+  </footer>
+
+  <script src="about.js"></script>
+</body>
+</html>

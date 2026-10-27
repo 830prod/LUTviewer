@@ -30,6 +30,7 @@ if (process.env.LUTV_USER_DATA) app.setPath('userData', process.env.LUTV_USER_DA
 const CAPTURE_TO = process.env.LUTV_CAPTURE;
 
 let splashWin = null;
+let aboutWin = null;
 let mainWin = null;
 let splashShownAt = 0;
 let updaterStarted = false;
@@ -148,6 +149,20 @@ async function sendRating(stars) {
 }
 
 // ---------- Windows ----------
+function showAbout() {
+  if (aboutWin) { aboutWin.focus(); return; }
+  aboutWin = new BrowserWindow({
+    width: 380, height: 560, resizable: false, minimizable: false, maximizable: false, fullscreenable: false,
+    show: false, titleBarStyle: 'hiddenInset', trafficLightPosition: { x: 14, y: 14 },
+    backgroundColor: '#021C30', title: 'About LUTviewer', parent: mainWin || undefined,
+    webPreferences: { preload: path.join(__dirname, 'preload.js'), contextIsolation: true, sandbox: true },
+  });
+  aboutWin.loadURL(`${SCHEME}://app/about.html`);
+  aboutWin.once('ready-to-show', () => aboutWin.show());
+  aboutWin.on('closed', () => { aboutWin = null; });
+  aboutWin.webContents.on('will-navigate', (e) => e.preventDefault());
+}
+
 function createSplash() {
   splashWin = new BrowserWindow({
     width: 560, height: 315, frame: false, resizable: false, movable: true, show: false,
@@ -203,6 +218,7 @@ function revealMain() {
     if (splashWin) splashWin.close();
     flushPendingOpen();
     if (!updaterStarted) { updaterStarted = true; updater.schedule(); }
+    if (process.env.LUTV_OPEN_ABOUT) showAbout();
     if (CAPTURE_TO && mainWin) {
       setTimeout(async () => {
         const img = await mainWin.webContents.capturePage();
@@ -389,8 +405,26 @@ function registerIpc() {
   ipcMain.handle('app:version', () => app.getVersion());
 
   ipcMain.handle('rating:send', (_e, stars) => sendRating(stars));
+  ipcMain.handle('about:info', () => {
+    const st = getSettings();
+    return {
+      version: app.getVersion(),
+      electron: process.versions.electron,
+      chrome: process.versions.chrome,
+      arch: process.arch,
+      lutCount: getLibrary().luts.length,
+      favorites: getLibrary().luts.filter((l) => l.favorite).length,
+      exports: st.exportCount || 0,
+      usageSeconds: st.usageSeconds || 0,
+      autoUpdate: st.autoUpdate !== false,
+    };
+  });
+  ipcMain.handle('about:rate', () => {
+    if (aboutWin) aboutWin.close();
+    if (mainWin) { mainWin.show(); mainWin.focus(); mainWin.webContents.send('menu:rate'); }
+  });
   ipcMain.handle('shell:open-url', (_e, url) => {
-    if (/^https:\/\/github\.com\/830prod\/LUTviewer(\/|$)/.test(url)) shell.openExternal(url);
+    if (/^https:\/\/(github\.com\/830prod\/LUTviewer|830prod\.github\.io\/LUTviewer)(\/|$)/.test(url)) shell.openExternal(url);
   });
 
   ipcMain.handle('export:save', async (_e, data, suggested) => {
@@ -413,7 +447,7 @@ function buildMenu() {
     {
       role: 'appMenu',
       submenu: [
-        { role: 'about' },
+        { label: 'About LUTviewer', click: showAbout },
         { label: 'Check for Updates…', click: () => updater.check({ manual: true }) },
         { label: 'Rate LUTviewer…', click: send('menu:rate') },
         {
