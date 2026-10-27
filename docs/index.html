@@ -114,6 +114,33 @@
     .note { max-width: 640px; margin: 26px auto 0; font-size: 14px; color: var(--muted); }
     code { font: 13px ui-monospace, SFMono-Regular, Menlo, monospace; background: rgba(2,28,48,.7); padding: 2px 7px; border-radius: 5px; color: var(--ice); }
 
+    .signup { max-width: 520px; margin: 30px auto 0; text-align: left; }
+    .signup label { display: block; font-weight: 600; margin-bottom: 10px; text-align: center; }
+    .signup label span { font-weight: 400; color: var(--muted); }
+    .signup-row { display: flex; gap: 10px; }
+    .signup input {
+      flex: 1; min-width: 0; padding: 13px 16px; border-radius: 12px; border: 1px solid rgba(233,245,253,.3);
+      background: rgba(2,28,48,.65); color: var(--ice); font: inherit; font-size: 16px; outline: none;
+    }
+    .signup input:focus { border-color: var(--mist); }
+    .signup .btn { padding: 13px 20px; border: 0; cursor: pointer; font: inherit; font-weight: 600; }
+    .signup small { display: block; margin-top: 10px; color: var(--muted); font-size: 13px; text-align: center; }
+    .signup-done { text-align: center; font-weight: 600; margin: 0; }
+    .thanks {
+      position: fixed; right: 20px; bottom: 20px; z-index: 50; width: min(420px, calc(100vw - 32px));
+      display: flex; gap: 14px; padding: 20px; border-radius: 16px; background: var(--ink-2);
+      border: 1px solid rgba(233,245,253,.2); box-shadow: 0 24px 60px rgba(0,0,0,.5); animation: pop .3s ease;
+    }
+    @keyframes pop { from { transform: translateY(16px); opacity: 0; } }
+    .thanks img { width: 46px; height: 46px; flex: none; }
+    .thanks b { display: block; margin-bottom: 4px; }
+    .thanks p { margin: 0 0 12px; font-size: 14px; color: var(--muted); }
+    .thanks .signup { margin: 0; }
+    .thanks .signup input, .thanks .signup .btn { padding: 10px 12px; font-size: 14px; }
+    .thanks-close { position: absolute; top: 8px; right: 10px; border: 0; background: none; color: var(--muted); font-size: 22px; cursor: pointer; line-height: 1; }
+    .thanks-close:hover { color: var(--ice); }
+    @media (max-width: 520px) { .signup-row { flex-direction: column; } .thanks { right: 16px; bottom: 16px; } }
+
     footer { padding: 46px 0 60px; color: var(--muted); font-size: 14px; }
     footer .wrap { display: flex; justify-content: space-between; gap: 20px; flex-wrap: wrap; align-items: center; border-top: 1px solid var(--line); padding-top: 30px; }
     footer a { text-decoration: none; } footer a:hover { color: var(--ice); }
@@ -156,11 +183,11 @@
         <h1>LUT<span>viewer</span></h1>
         <p class="lede">See every LUT on your footage before you commit to one. A free Mac app with camera log → Rec.709 built in.</p>
         <div class="ctas">
-          <a class="btn btn-primary" href="https://github.com/830prod/LUTviewer/releases/latest/download/LUTviewer.dmg">
+          <a class="btn btn-primary" href="https://github.com/830prod/LUTviewer/releases/latest/download/LUTviewer.dmg" data-goatcounter-click="download-top" data-download>
             <svg viewBox="0 0 24 24"><path d="M16.37 12.6c-.02-2.3 1.88-3.4 1.97-3.46-1.07-1.57-2.74-1.78-3.33-1.8-1.42-.14-2.77.83-3.49.83-.72 0-1.83-.81-3.01-.79-1.55.02-2.98.9-3.78 2.29-1.61 2.8-.41 6.94 1.16 9.21.77 1.11 1.68 2.36 2.88 2.31 1.16-.05 1.59-.75 2.99-.75 1.4 0 1.79.75 3.01.72 1.24-.02 2.03-1.13 2.79-2.25.88-1.29 1.24-2.53 1.26-2.6-.03-.01-2.42-.93-2.45-3.71zM14.08 5.85c.64-.77 1.07-1.85.95-2.92-.92.04-2.03.61-2.69 1.38-.59.68-1.11 1.77-.97 2.82 1.02.08 2.07-.52 2.71-1.28z"/></svg>
             Download for Mac
           </a>
-          <a class="btn btn-ghost" href="https://github.com/830prod/LUTviewer">
+          <a class="btn btn-ghost" href="https://github.com/830prod/LUTviewer" data-goatcounter-click="github-top">
             <svg viewBox="0 0 16 16"><path d="M8 0C3.58 0 0 3.58 0 8c0 3.54 2.29 6.53 5.47 7.59.4.07.55-.17.55-.38 0-.19-.01-.82-.01-1.49-2.01.37-2.53-.49-2.69-.94-.09-.23-.48-.94-.82-1.13-.28-.15-.68-.52-.01-.53.63-.01 1.08.58 1.23.82.72 1.21 1.87.87 2.33.66.07-.52.28-.87.51-1.07-1.78-.2-3.64-.89-3.64-3.95 0-.87.31-1.59.82-2.15-.08-.2-.36-1.02.08-2.12 0 0 .67-.21 2.2.82.64-.18 1.32-.27 2-.27.68 0 1.36.09 2 .27 1.53-1.04 2.2-.82 2.2-.82.44 1.1.16 1.92.08 2.12.51.56.82 1.27.82 2.15 0 3.07-1.87 3.75-3.65 3.95.29.25.54.73.54 1.48 0 1.07-.01 1.93-.01 2.2 0 .21.15.46.55.38A8.013 8.013 0 0016 8c0-4.42-3.58-8-8-8z"/></svg>
             View on GitHub
           </a>
@@ -275,10 +302,18 @@
           <h2>Free. Open source. Made for filmmakers.</h2>
           <p style="color:var(--ice);font-size:19px;margin:0 0 30px">One download for every Mac, Apple Silicon and Intel.</p>
           <div class="ctas">
-            <a class="btn btn-primary" href="https://github.com/830prod/LUTviewer/releases/latest/download/LUTviewer.dmg">Download LUTviewer.dmg</a>
-            <a class="btn btn-ghost" href="https://github.com/830prod/LUTviewer/releases">All releases</a>
+            <a class="btn btn-primary" href="https://github.com/830prod/LUTviewer/releases/latest/download/LUTviewer.dmg" data-goatcounter-click="download-bottom" data-download>Download LUTviewer.dmg</a>
+            <a class="btn btn-ghost" href="https://github.com/830prod/LUTviewer/releases" data-goatcounter-click="all-releases">All releases</a>
           </div>
           <p class="note">Open the DMG and drag LUTviewer into Applications. The first time, right-click the app and choose <b>Open</b>. If macOS says it's damaged, run <code>xattr -cr /Applications/LUTviewer.app</code> in Terminal once.</p>
+          <form class="signup" action="https://buttondown.com/api/emails/embed-subscribe/830prod" method="post" target="_blank" data-goatcounter-click="signup-bottom">
+            <label for="email">Want to hear when a new version is out? <span>(optional)</span></label>
+            <div class="signup-row">
+              <input type="email" name="email" id="email" placeholder="you@example.com" autocomplete="email" required>
+              <button class="btn btn-primary" type="submit">Notify me</button>
+            </div>
+            <small>Just update emails. No spam, unsubscribe anytime. The download never needs an email.</small>
+          </form>
         </div>
       </div>
     </section>
@@ -286,7 +321,7 @@
 
   <footer>
     <div class="wrap">
-      <div>© 830 Productions · MIT License</div>
+      <div>© 830 Productions · MIT License · <span title="Visit counts by GoatCounter: no cookies, no personal data">Cookie-free stats</span></div>
       <div class="links">
         <a href="https://github.com/830prod/LUTviewer">GitHub</a>
         <a href="https://github.com/830prod/LUTviewer/releases">Releases</a>
@@ -295,7 +330,37 @@
     </div>
   </footer>
 
+  <aside class="thanks" id="thanks" hidden role="dialog" aria-labelledby="thanksTitle">
+    <button class="thanks-close" id="thanksClose" aria-label="Close">×</button>
+    <img src="icon.png" alt="">
+    <div>
+      <b id="thanksTitle">Thanks for downloading LUTviewer!</b>
+      <p>Your download has started. Want an email when there's a new version?</p>
+      <form class="signup compact" action="https://buttondown.com/api/emails/embed-subscribe/830prod" method="post" target="_blank" data-goatcounter-click="signup-popup">
+        <div class="signup-row">
+          <input type="email" name="email" placeholder="you@example.com" autocomplete="email" required aria-label="Email address">
+          <button class="btn btn-primary" type="submit">Notify me</button>
+        </div>
+      </form>
+    </div>
+  </aside>
+
+  <script data-goatcounter="https://830lutviewer.goatcounter.com/count" async src="https://gc.zgo.at/count.js"></script>
   <script>
+    // After a download click, offer the (optional) update-email sign-up once.
+    const thanks = document.getElementById('thanks');
+    document.querySelectorAll('[data-download]').forEach((a) => a.addEventListener('click', () => {
+      try { if (localStorage.getItem('lv-signup-seen')) return; localStorage.setItem('lv-signup-seen', '1'); } catch {}
+      setTimeout(() => { thanks.hidden = false; }, 600);
+    }));
+    document.getElementById('thanksClose').addEventListener('click', () => { thanks.hidden = true; });
+    document.querySelectorAll('form.signup').forEach((f) => f.addEventListener('submit', () => {
+      setTimeout(() => {
+        f.innerHTML = '<p class="signup-done">You\'re on the list. Check your inbox to confirm.</p>';
+        if (f.closest('.thanks')) setTimeout(() => { thanks.hidden = true; }, 2500);
+      }, 50);
+    }));
+
     // Show the current release number without hard-coding it.
     fetch('https://api.github.com/repos/830prod/LUTviewer/releases/latest')
       .then((r) => (r.ok ? r.json() : null))

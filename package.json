@@ -28,7 +28,8 @@
     "start": "electron .",
     "test": "node scripts/test-color.mjs",
     "dist": "electron-builder --mac --universal",
-    "dist:arm64": "electron-builder --mac --arm64"
+    "dist:arm64": "electron-builder --mac --arm64",
+    "stats": "node scripts/stats.mjs"
   },
   "devDependencies": {
     "electron": "^33.2.0",
