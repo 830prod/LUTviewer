@@ -683,6 +683,205 @@ function bindUpdates() {
   $('btnUpdateSkip').addEventListener('click', () => { api.update.skip(); bar.hidden = true; });
 }
 
+// ---------- Before / after export ----------
+const exportState = { controller: null, savedPath: null, phase: 'form' };
+
+function exportLengths() {
+  const src = state.source;
+  if (src.kind !== 'video') return { options: [[4, '4 seconds'], [8, '8 seconds'], [12, '12 seconds']], def: 8 };
+  const d = src.el.duration || 0;
+  const opts = [5, 10, 15, 30].filter((n) => n < d - 0.5).map((n) => [n, `${n} seconds from the playhead`]);
+  opts.push(['full', `Whole clip (${fmtTime(d)})`]);
+  return { options: opts, def: d <= 12 ? 'full' : 10 };
+}
+
+function setExportPhase(phase) {
+  exportState.phase = phase;
+  $('exportForm').hidden = phase !== 'form';
+  $('exportProgress').hidden = phase === 'form';
+  $('btnExportGo').hidden = phase === 'running';
+  $('btnExportGo').textContent = phase === 'done' ? 'Show in Finder' : 'Export video';
+  $('btnExportCancel').textContent = phase === 'done' || phase === 'error' ? 'Done' : 'Cancel';
+  if (phase === 'error') $('btnExportGo').hidden = true;
+}
+
+function openExport() {
+  const src = state.source;
+  const entry = activeEntry();
+  if (!src) return;
+  if (!entry || state.broken.has(entry.id)) { toast('Pick a LUT first, so the video has an “after”.'); return; }
+  if (src.kind === 'video' && !src.el.paused) src.el.pause();
+  const cam = effectiveCamera();
+  $('exportSub').textContent = `${src.kind === 'chart' ? 'Test chart' : src.name} · ${entry.name}`;
+  $('exportBeforeField').hidden = cam.curve === 'none';
+  setSeg('exportBefore', exportState.before || 'raw');
+  setSeg('exportLayout', exportState.layout || 'wipe');
+  const { options, def } = exportLengths();
+  const sel = $('exportLength');
+  sel.textContent = '';
+  for (const [v, label] of options) {
+    const o = document.createElement('option');
+    o.value = v;
+    o.textContent = label;
+    sel.append(o);
+  }
+  sel.value = String(def);
+  setExportPhase('form');
+  $('exportSheet').hidden = false;
+}
+
+function closeExport() {
+  if (exportState.controller) exportState.controller.abort();
+  $('exportSheet').hidden = true;
+}
+
+async function runExport() {
+  const src = state.source;
+  const entry = activeEntry();
+  const layout = [...$('exportLayout').children].find((b) => b.classList.contains('on'))?.dataset.v || 'wipe';
+  const before = [...$('exportBefore').children].find((b) => b.classList.contains('on'))?.dataset.v || 'raw';
+  exportState.layout = layout;
+  exportState.before = before;
+  const lengthVal = $('exportLength').value;
+  setExportPhase('running');
+  $('exportFill').style.width = '0%';
+  $('exportStatus').textContent = src.kind === 'video' ? 'Rendering… (the clip plays through once)' : 'Rendering…';
+  const controller = new AbortController();
+  exportState.controller = controller;
+  try {
+    const lut = LutParser.parseLut(await api.library.read(entry.id), entry.file);
+    const data = await Exporter.exportBeforeAfter({
+      source: src,
+      params: renderParams(),
+      lutId: entry.id,
+      lut,
+      lutName: entry.name,
+      layout,
+      beforeRaw: before === 'raw' && !$('exportBeforeField').hidden,
+      length: lengthVal === 'full' ? 'full' : Number(lengthVal),
+      labels: $('exportLabels').checked,
+      signal: controller.signal,
+      onProgress: (f) => {
+        $('exportFill').style.width = `${Math.round(f * 100)}%`;
+        $('exportStatus').textContent = `Rendering… ${Math.round(f * 100)}%`;
+      },
+    });
+    exportState.controller = null;
+    $('exportStatus').textContent = 'Choose where to save…';
+    const base = (src.kind === 'chart' ? 'Test chart' : src.name).replace(/\.[^.]+$/, '');
+    const saved = await api.exportVideo.save(data.buffer, `${base} - ${entry.name} before-after.mp4`);
+    if (!saved) { setExportPhase('form'); return; }
+    exportState.savedPath = saved;
+    $('exportStatus').textContent = `Saved “${saved.split('/').pop()}”`;
+    setExportPhase('done');
+  } catch (err) {
+    exportState.controller = null;
+    if (err.cancelled) { $('exportSheet').hidden = true; return; }
+    console.error(err);
+    $('exportStatus').textContent = `Export failed: ${err.message}`;
+    setExportPhase('error');
+  }
+}
+
+function bindExport() {
+  $('btnExport').addEventListener('click', openExport);
+  api.onMenu('export', openExport);
+  for (const id of ['exportLayout', 'exportBefore']) {
+    $(id).addEventListener('click', (e) => {
+      const b = e.target.closest('button');
+      if (b) setSeg(id, b.dataset.v);
+    });
+  }
+  $('btnExportCancel').addEventListener('click', closeExport);
+  $('btnExportGo').addEventListener('click', () => {
+    if (exportState.phase === 'done') api.exportVideo.reveal(exportState.savedPath);
+    else runExport();
+  });
+  // While the sheet is open, keep keyboard shortcuts away from the main view.
+  document.addEventListener('keydown', (e) => {
+    if ($('exportSheet').hidden) return;
+    if (e.key === 'Escape') closeExport();
+    if (e.key === 'Enter' && exportState.phase === 'form') runExport();
+    e.stopImmediatePropagation();
+  }, true);
+}
+
+// ---------- Rating prompt ----------
+const RATE_AFTER_SECONDS = 120;
+const RATE_SNOOZE_SECONDS = 30 * 60;
+const REPO_URL = 'https://github.com/830prod/LUTviewer';
+let usage = { seconds: 0, done: false, nextAt: RATE_AFTER_SECONDS };
+
+function showRating() {
+  $('rateAsk').hidden = false;
+  $('rateThanks').hidden = true;
+  for (const b of $('stars').children) b.classList.remove('lit');
+  $('rateCard').hidden = false;
+}
+
+function snoozeRating() {
+  usage.nextAt = usage.seconds + RATE_SNOOZE_SECONDS;
+  saveSettings({ ratingNextAt: usage.nextAt });
+  $('rateCard').hidden = true;
+}
+
+async function submitRating(n) {
+  usage.done = true;
+  saveSettings({ ratingDone: true, rating: n });
+  api.rating.send(n);
+  $('rateAsk').hidden = true;
+  $('rateThanks').hidden = false;
+  const actions = $('rateThanksActions');
+  actions.textContent = '';
+  const button = (label, cls, fn) => {
+    const b = document.createElement('button');
+    b.className = cls;
+    b.textContent = label;
+    b.addEventListener('click', fn);
+    actions.append(b);
+  };
+  if (n >= 4) {
+    $('rateThanksTitle').textContent = 'Thank you! 🎬';
+    $('rateThanksText').textContent = 'Would you also star LUTviewer on GitHub? It helps other filmmakers find it.';
+    button('★ Star on GitHub', 'btn', () => { api.openUrl(REPO_URL); $('rateCard').hidden = true; });
+  } else {
+    $('rateThanksTitle').textContent = 'Thanks for the honest rating';
+    $('rateThanksText').textContent = 'What would make LUTviewer better for you?';
+    const body = encodeURIComponent(`Rating: ${'★'.repeat(n)}${'☆'.repeat(5 - n)}\n\nWhat would make LUTviewer better?\n\n`);
+    button('Share feedback', 'btn', () => {
+      api.openUrl(`${REPO_URL}/issues/new?title=${encodeURIComponent(`Feedback (${n} stars)`)}&body=${body}`);
+      $('rateCard').hidden = true;
+    });
+  }
+  button('Close', 'link-btn', () => { $('rateCard').hidden = true; });
+}
+
+function bindRating(s) {
+  usage = { seconds: s.usageSeconds || 0, done: !!s.ratingDone, nextAt: s.ratingNextAt || RATE_AFTER_SECONDS };
+  const stars = [...$('stars').children];
+  const light = (n) => stars.forEach((b, i) => b.classList.toggle('lit', i < n));
+  for (const b of stars) {
+    b.addEventListener('mouseenter', () => light(+b.dataset.n));
+    b.addEventListener('focus', () => light(+b.dataset.n));
+    b.addEventListener('click', () => submitRating(+b.dataset.n));
+  }
+  $('stars').addEventListener('mouseleave', () => light(0));
+  $('rateLater').addEventListener('click', snoozeRating);
+  $('rateClose').addEventListener('click', () => { if ($('rateAsk').hidden) $('rateCard').hidden = true; else snoozeRating(); });
+  $('rateNever').addEventListener('click', () => { usage.done = true; saveSettings({ ratingDone: true }); $('rateCard').hidden = true; });
+  api.onMenu('rate', showRating);
+
+  // Count time only while LUTviewer is the active app, then ask once it's been used for 2 minutes.
+  const TICK = 15;
+  setInterval(() => {
+    if (!document.hasFocus() || document.hidden) return;
+    usage.seconds += TICK;
+    saveSettings({ usageSeconds: usage.seconds });
+    const busyNow = !$('exportSheet').hidden || !$('busy').hidden;
+    if (!usage.done && usage.seconds >= usage.nextAt && $('rateCard').hidden && !busyNow) showRating();
+  }, TICK * 1000);
+}
+
 // ---------- Startup ----------
 async function start() {
   api.progress({ pct: 8, label: 'Starting color engine…' });
@@ -734,6 +933,8 @@ async function start() {
   selectLut(state.luts.some((l) => l.id === s.activeId) ? s.activeId : null);
 
   bindUpdates();
+  bindExport();
+  bindRating(s);
   api.onOpenPaths(handlePaths);
   api.onMenu('open-media', chooseMedia);
   api.onMenu('add-luts', chooseLuts);

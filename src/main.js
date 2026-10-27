@@ -1,6 +1,6 @@
 'use strict';
 
-const { app, BrowserWindow, ipcMain, protocol, dialog, screen, shell, Menu } = require('electron');
+const { app, BrowserWindow, ipcMain, protocol, dialog, screen, shell, Menu, nativeTheme, net } = require('electron');
 const path = require('node:path');
 const fs = require('node:fs');
 const fsp = require('node:fs/promises');
@@ -123,6 +123,28 @@ function registerProtocol() {
 function mediaUrl(filePath) {
   allowedMedia.add(filePath);
   return `${SCHEME}://media/${filePath.split('/').map(encodeURIComponent).join('/').replace(/^\//, '')}`;
+}
+
+// ---------- Dock icon follows the system appearance ----------
+function updateDockIcon() {
+  if (!app.dock) return;
+  app.dock.setIcon(path.join(ASSETS_DIR, nativeTheme.shouldUseDarkColors ? 'icon-dark.png' : 'icon-light.png'));
+}
+
+// ---------- Ratings ----------
+// Only the star count is sent (anonymously, and only when the user chooses to rate).
+const RATING_ENDPOINT = 'https://830lutviewer.goatcounter.com/count';
+async function sendRating(stars) {
+  const n = Math.max(1, Math.min(5, Math.round(stars)));
+  const params = new URLSearchParams({
+    p: `rating/${n}-stars/v${app.getVersion()}`, t: `Rated ${n} stars`, e: 'true', rnd: String(Math.random()).slice(2),
+  });
+  try {
+    await net.fetch(`${RATING_ENDPOINT}?${params}`, { headers: { 'User-Agent': `LUTviewer/${app.getVersion()} (Macintosh)` } });
+    return true;
+  } catch {
+    return false;
+  }
 }
 
 // ---------- Windows ----------
@@ -365,6 +387,23 @@ function registerIpc() {
   ipcMain.handle('update:skip', () => updater.skip());
   ipcMain.handle('update:check', () => updater.check({ manual: true }));
   ipcMain.handle('app:version', () => app.getVersion());
+
+  ipcMain.handle('rating:send', (_e, stars) => sendRating(stars));
+  ipcMain.handle('shell:open-url', (_e, url) => {
+    if (/^https:\/\/github\.com\/830prod\/LUTviewer(\/|$)/.test(url)) shell.openExternal(url);
+  });
+
+  ipcMain.handle('export:save', async (_e, data, suggested) => {
+    const r = await dialog.showSaveDialog(mainWin, {
+      title: 'Save before / after video',
+      defaultPath: path.join(app.getPath('movies'), suggested.replace(/[\/:*?"<>|]+/g, '-')),
+      filters: [{ name: 'MP4 video', extensions: ['mp4'] }],
+    });
+    if (r.canceled || !r.filePath) return null;
+    await fsp.writeFile(r.filePath, Buffer.from(data));
+    return r.filePath;
+  });
+  ipcMain.handle('shell:reveal', (_e, p) => shell.showItemInFolder(p));
 }
 
 // ---------- Menu ----------
@@ -376,6 +415,7 @@ function buildMenu() {
       submenu: [
         { role: 'about' },
         { label: 'Check for Updates…', click: () => updater.check({ manual: true }) },
+        { label: 'Rate LUTviewer…', click: send('menu:rate') },
         {
           label: 'Automatically Check for Updates', type: 'checkbox', checked: updater.autoCheckEnabled(),
           click: (item) => updater.setAutoCheck(item.checked),
@@ -393,6 +433,7 @@ function buildMenu() {
       submenu: [
         { label: 'Open Footage…', accelerator: 'CmdOrCtrl+O', click: send('menu:open-media') },
         { label: 'Add LUTs…', accelerator: 'CmdOrCtrl+Shift+L', click: send('menu:add-luts') },
+        { label: 'Export Before / After Video…', accelerator: 'CmdOrCtrl+E', click: send('menu:export') },
         { type: 'separator' },
         { label: 'Show LUT Library in Finder', click: () => { fs.mkdirSync(lutDir(), { recursive: true }); shell.openPath(lutDir()); } },
         { type: 'separator' },
@@ -422,6 +463,8 @@ app.whenReady().then(() => {
   registerIpc();
   updater.init({ getWindow: () => mainWin, getSettings, saveSettings });
   buildMenu();
+  updateDockIcon();
+  nativeTheme.on('updated', updateDockIcon);
   createSplash();
   createMain();
   app.on('activate', () => { if (!mainWin) createMain(); });

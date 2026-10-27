@@ -48,8 +48,9 @@ Shooting log? Tell LUTviewer your camera and it converts the footage to Rec.709 
 - ↔️ **Before / after split.** Drag the wipe across the frame, or hold <kbd>\\</kbd> to see the image without the LUT.
 - ⭐ **Favorites, search, mix.** Star your go-tos, filter by name or pack, and blend a LUT with the mix slider.
 - 🎬 **ProRes friendly.** ProRes clips get a quick preview copy made automatically with macOS's built-in tools.
+- 🎬 **Before / after video export.** Turn any clip or still into a shareable MP4 with an animated wipe, split screen or side by side, plus a small LUTviewer watermark.
 - 🔄 **Automatic updates.** LUTviewer checks GitHub for new versions and updates itself in one click (LUTviewer menu → *Check for Updates…*).
-- 🔒 **Private and offline.** Nothing is uploaded. Your LUTs and footage stay on your Mac.
+- 🔒 **Private.** Your footage and LUTs never leave your Mac. The only thing ever sent is a star rating, and only if you choose to give one.
 
 <br clear="right">
 
@@ -102,8 +103,23 @@ LUTviewer guesses the type from the file name (anything mentioning S-Log, C-Log,
 | <kbd>F</kbd> | Favorite current LUT |
 | <kbd>0</kbd> | No LUT |
 | <kbd>⌘</kbd> <kbd>O</kbd> | Open footage |
+| <kbd>⌘</kbd> <kbd>E</kbd> | Export before / after video |
 | <kbd>⇧</kbd> <kbd>⌘</kbd> <kbd>L</kbd> | Add LUTs |
 | <kbd>⇧</kbd> <kbd>⌘</kbd> <kbd>D</kbd> | Dock window to the right edge |
+
+## Before / after export
+
+<p align="center"><img src="docs/export-example.jpg" alt="Example before / after export with the Kodachrome LUT" width="80%"></p>
+
+Click the **export** button under the preview (or press <kbd>⌘</kbd> <kbd>E</kbd>) to make a short MP4:
+
+| Layout | What you get |
+| --- | --- |
+| **Wipe** | A divider sweeps back and forth across the frame. The most eye-catching option for social posts. |
+| **Split** | Before on the left, after on the right. |
+| **Side by side** | The full frame twice, before next to after. |
+
+Choose a length (from the playhead, or the whole clip), toggle the *Before / After* labels, and for log footage choose whether "before" shows the original log image or the Rec.709 conversion. A small LUTviewer watermark is added in the bottom corner. Exports are H.264 MP4 files, encoded on your Mac's hardware.
 
 ## Supported files
 
@@ -148,6 +164,12 @@ LUTviewer checks for a new release when it opens (and every few hours while it r
 </details>
 
 <details>
+<summary><b>Does LUTviewer collect any data?</b></summary>
+
+No usage tracking, and your footage and LUTs never leave your Mac. After you've used the app for a couple of minutes it asks once whether you'd like to rate it. If you tap a star, only that star count (and the app version) is sent, anonymously. Updates are checked against GitHub's public release list.
+</details>
+
+<details>
 <summary><b>Does it work on Intel Macs?</b></summary>
 
 Yes. The download is a universal app that runs natively on both Apple Silicon and Intel.
@@ -185,6 +207,10 @@ build/                        App icon and DMG artwork
 ## Contributing
 
 Bug reports, camera requests and pull requests are welcome. [Open an issue](https://github.com/830prod/LUTviewer/issues) to get started.
+
+## Credits
+
+MP4 writing uses [mp4-muxer](https://github.com/Vanilagy/mp4-muxer) by Vanilagy (MIT).
 
 ## License
 

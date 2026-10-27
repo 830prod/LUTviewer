@@ -220,6 +220,7 @@ uniform float uLutSize;
 uniform float uIntensity;
 uniform float uSplit;        // < 0 disables; otherwise x position of the wipe
 uniform bool  uShowOriginal;
+uniform bool  uBeforeRaw;    // "before" shows the untouched camera file instead of the Rec.709 conversion
 
 float log10f(float x) { return log(x) / log(10.0); }
 float toFull(float v) { return v * 876.0 / 1023.0 + 64.0 / 1023.0; }
@@ -351,6 +352,8 @@ void main() {
   if (uHasLut && !original) {
     vec3 lutIn = uLutLogInput ? src : converted;
     graded = mix(converted, applyLut(lutIn), uIntensity);
+  } else if (original && uBeforeRaw) {
+    graded = src;
   }
   if (uSplit >= 0.0 && abs(vUv.x - uSplit) < 0.0015) graded = vec3(1.0);
   outColor = vec4(clamp(graded, 0.0, 1.0), 1.0);

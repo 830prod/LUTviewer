@@ -51,6 +51,9 @@
         <button class="icon-btn" id="btnSplit" title="Before / after split (S)">
           <svg viewBox="0 0 20 20"><rect x="2.5" y="4.5" width="15" height="11" rx="1.5"/><path d="M10 2v16"/></svg>
         </button>
+        <button class="icon-btn" id="btnExport" title="Export before / after video (⌘E)">
+          <svg viewBox="0 0 20 20"><path d="M10 12.5V3M6.5 6.5L10 3l3.5 3.5"/><path d="M4 11v4.5A1.5 1.5 0 005.5 17h9a1.5 1.5 0 001.5-1.5V11"/></svg>
+        </button>
         <button class="icon-btn" id="btnOpen" title="Open footage (⌘O)">
           <svg viewBox="0 0 20 20"><path d="M3 6.5V15a1.5 1.5 0 001.5 1.5h11A1.5 1.5 0 0017 15V8a1.5 1.5 0 00-1.5-1.5H10L8.5 4.5h-4A1.5 1.5 0 003 6v.5z"/></svg>
         </button>
@@ -134,10 +137,71 @@
     <button data-act="remove" class="danger">Remove from library</button>
   </div>
 
+  <!-- Export sheet -->
+  <div class="sheet-backdrop" id="exportSheet" hidden>
+    <div class="sheet" role="dialog" aria-labelledby="exportTitle">
+      <h3 id="exportTitle">Export before / after</h3>
+      <p class="sheet-sub" id="exportSub"></p>
+      <div id="exportForm">
+        <div class="sheet-field">
+          <span class="field-label">Layout</span>
+          <div class="seg layout-seg" id="exportLayout">
+            <button data-v="wipe"><i class="lay lay-wipe"></i>Wipe</button>
+            <button data-v="split"><i class="lay lay-split"></i>Split</button>
+            <button data-v="side"><i class="lay lay-side"></i>Side by side</button>
+          </div>
+        </div>
+        <div class="sheet-field" id="exportBeforeField">
+          <span class="field-label">“Before” shows</span>
+          <div class="seg small" id="exportBefore">
+            <button data-v="raw">Original log</button>
+            <button data-v="converted">Rec.709 conversion</button>
+          </div>
+        </div>
+        <div class="sheet-row">
+          <label class="sheet-field">
+            <span class="field-label">Length</span>
+            <select id="exportLength"></select>
+          </label>
+          <label class="check"><input type="checkbox" id="exportLabels" checked> Before / After labels</label>
+        </div>
+        <p class="hint-line">Your LUTviewer watermark is added to the bottom corner.</p>
+      </div>
+      <div id="exportProgress" hidden>
+        <div class="export-bar"><i id="exportFill"></i></div>
+        <p class="sheet-sub" id="exportStatus">Preparing…</p>
+      </div>
+      <div class="sheet-actions">
+        <button class="link-btn" id="btnExportCancel">Cancel</button>
+        <button class="btn" id="btnExportGo">Export video</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Rating card -->
+  <div class="rate-card" id="rateCard" hidden role="dialog" aria-labelledby="rateTitle">
+    <button class="rate-close" id="rateClose" aria-label="Close">×</button>
+    <div id="rateAsk">
+      <b id="rateTitle">Enjoying LUTviewer?</b>
+      <p>Tap a star to rate it. It really helps!</p>
+      <div class="stars" id="stars">
+        <button data-n="1" aria-label="1 star">★</button><button data-n="2" aria-label="2 stars">★</button><button data-n="3" aria-label="3 stars">★</button><button data-n="4" aria-label="4 stars">★</button><button data-n="5" aria-label="5 stars">★</button>
+      </div>
+      <div class="rate-links"><button class="link-btn" id="rateLater">Not now</button><button class="link-btn" id="rateNever">Don't ask again</button></div>
+    </div>
+    <div id="rateThanks" hidden>
+      <b id="rateThanksTitle">Thank you!</b>
+      <p id="rateThanksText"></p>
+      <div class="rate-links" id="rateThanksActions"></div>
+    </div>
+  </div>
+
+  <script src="vendor/mp4-muxer.js"></script>
   <script src="colorscience.js"></script>
   <script src="lut.js"></script>
   <script src="gl.js"></script>
   <script src="testchart.js"></script>
+  <script src="exporter.js"></script>
   <script src="app.js"></script>
 </body>
 </html>

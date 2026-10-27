@@ -137,13 +137,15 @@
       gl.uniform1f(this.u.uIntensity, p.intensity);
       gl.uniform1f(this.u.uSplit, split);
       gl.uniform1i(this.u.uShowOriginal, p.showOriginal ? 1 : 0);
+      gl.uniform1i(this.u.uBeforeRaw, p.beforeRaw ? 1 : 0);
       gl.uniform2f(this.u.uScale, 1, 1);
     }
 
-    render(p) {
+    // vp = [x, y, w, h] to draw into part of the canvas (used for side-by-side export).
+    render(p, vp) {
       const gl = this.gl;
       gl.bindFramebuffer(gl.FRAMEBUFFER, null);
-      gl.viewport(0, 0, this.canvas.width, this.canvas.height);
+      gl.viewport(...(vp || [0, 0, this.canvas.width, this.canvas.height]));
       this.setUniforms(p, p.lutId, p.split);
       gl.uniform1f(this.u.uFlipY, 1);
       gl.drawArrays(gl.TRIANGLE_STRIP, 0, 4);
