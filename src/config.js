@@ -3,7 +3,7 @@
 // Links for supporting LUTviewer. Leave tipUrl empty to hide every tip button.
 module.exports = {
   // Stripe Payment Link (dashboard → Payment Links → "Customers choose what to pay").
-  tipUrl: '',
+  tipUrl: 'https://buy.stripe.com/cNi8wJ3y55Hw6uh1lSeUU0a',
   // Mailchimp audience for update emails (from the embedded sign-up form).
   mailchimp: {
     endpoint: 'https://830productions.us7.list-manage.com/subscribe/post-json',

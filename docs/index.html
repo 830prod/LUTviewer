@@ -160,11 +160,15 @@
     .tip-band h2 { margin: 0 0 6px; font-size: 26px; }
     .tip-band p { margin: 0; color: var(--muted); }
     .tip-reel { width: 84px; height: 84px; }
+    .tip-actions { display: flex; align-items: center; gap: 18px; }
+    .tip-qr { width: 96px; height: auto; border-radius: 12px; }
     @media (max-width: 760px) {
       .news-band { grid-template-columns: 1fr; text-align: center; padding: 30px 22px; }
       .news-band-reel { grid-row: auto; margin: 0 auto; width: 96px; height: 96px; }
       .tip-band { grid-template-columns: 1fr; text-align: center; }
       .tip-reel { margin: 0 auto; }
+      .tip-actions { justify-content: center; }
+      .tip-qr { display: none; }
     }
 
     footer { padding: 46px 0 60px; color: var(--muted); font-size: 14px; }
@@ -351,7 +355,10 @@
             <h2>Enjoying LUTviewer?</h2>
             <p>LUTviewer is free and always will be. If it saved you time on a project, you can leave a tip. Pay what you like, and it keeps the updates coming. 🎬</p>
           </div>
-          <a class="btn btn-primary" id="tipButton" href="#" target="_blank" rel="noopener" data-goatcounter-click="tip">☕ Leave a tip</a>
+          <div class="tip-actions">
+            <a class="btn btn-primary" id="tipButton" href="#" target="_blank" rel="noopener" data-goatcounter-click="tip">☕ Leave a tip</a>
+            <img class="tip-qr" src="tip-qr.png" alt="QR code: scan with your phone to leave a tip">
+          </div>
         </div>
       </div>
     </section>
@@ -416,7 +423,7 @@
     // After a download click, offer the (optional) update-email sign-up once.
     const thanks = document.getElementById('thanks');
     // Stripe Payment Link for tips. Leave empty to hide the tip sections.
-    const TIP_URL = '';
+    const TIP_URL = 'https://buy.stripe.com/cNi8wJ3y55Hw6uh1lSeUU0a';
     if (/^https:\/\/(buy|donate)\.stripe\.com\//.test(TIP_URL)) {
       document.querySelectorAll('[data-tip-only]').forEach((el) => { el.hidden = false; });
       document.getElementById('tipButton').href = TIP_URL;

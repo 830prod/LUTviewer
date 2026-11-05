@@ -231,6 +231,10 @@ build/                        App icon and DMG artwork
 
 Want to know when new features land? **[Get update emails](https://830prod.github.io/LUTviewer/#newsletter)**, or choose *Help → Get Update Emails…* inside the app.
 
+## Support LUTviewer
+
+LUTviewer is free and always will be. If it saves you time on a project, you can **[leave a tip ☕](https://buy.stripe.com/cNi8wJ3y55Hw6uh1lSeUU0a)** (pay what you like, securely through Stripe). It keeps the updates coming.
+
 ## Contributing
 
 Bug reports, camera requests and pull requests are welcome. [Open an issue](https://github.com/830prod/LUTviewer/issues) to get started.
