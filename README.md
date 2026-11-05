@@ -54,7 +54,7 @@ Shooting log? Tell LUTviewer your camera and it converts the footage to Rec.709 
 - 🎞 **Export to Premiere Pro or Final Cut Pro.** Bake your camera conversion, adjustments and LUT into one `.cube` that shows up straight in Premiere's *Input LUT* menu or Final Cut's *Custom LUT* effect.
 - 🎬 **Before / after video export.** Turn any clip or still into a shareable MP4 with an animated wipe, split screen or side by side, plus a small LUTviewer watermark.
 - 🔄 **Automatic updates.** LUTviewer checks GitHub for new versions and updates itself in one click (LUTviewer menu → *Check for Updates…*).
-- 🔒 **Private.** Your footage and LUTs never leave your Mac. The only thing ever sent is a star rating, and only if you choose to give one.
+- 🔒 **Private.** Your footage and LUTs never leave your Mac. The only things ever sent are a star rating and your email for update news, and only if you choose to give them.
 
 <br clear="right">
 
@@ -189,7 +189,7 @@ LUTviewer checks for a new release when it opens (and every few hours while it r
 <details>
 <summary><b>Does LUTviewer collect any data?</b></summary>
 
-No usage tracking, and your footage and LUTs never leave your Mac. After you've used the app for a couple of minutes it asks once whether you'd like to rate it. If you tap a star, only that star count (and the app version) is sent, anonymously. Updates are checked against GitHub's public release list.
+No usage tracking, and your footage and LUTs never leave your Mac. After you've used the app for a couple of minutes it asks once whether you'd like to rate it. If you tap a star, only that star count (and the app version) is sent, anonymously. LUTviewer may also offer update emails once. Your email (and first name, if you add it) goes to the 830 Productions mailing list only if you subscribe. Updates are checked against GitHub's public release list.
 </details>
 
 <details>
@@ -226,6 +226,10 @@ assets/                       830 Productions branding
 build/                        App icon and DMG artwork
 ```
 </details>
+
+## Stay in the loop
+
+Want to know when new features land? **[Get update emails](https://830prod.github.io/LUTviewer/#newsletter)**, or choose *Help → Get Update Emails…* inside the app.
 
 ## Contributing
 

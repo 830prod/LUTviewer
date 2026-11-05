@@ -49,7 +49,16 @@ contextBridge.exposeInMainWorld('lutviewer', {
   },
   version: () => ipcRenderer.invoke('app:version'),
   rating: { send: (stars) => ipcRenderer.invoke('rating:send', stars) },
-  about: { info: () => ipcRenderer.invoke('about:info'), rate: () => ipcRenderer.invoke('about:rate') },
+  about: {
+    info: () => ipcRenderer.invoke('about:info'),
+    rate: () => ipcRenderer.invoke('about:rate'),
+    newsletter: () => ipcRenderer.invoke('about:newsletter'),
+  },
+  support: {
+    config: () => ipcRenderer.invoke('support:config'),
+    tip: () => ipcRenderer.invoke('support:tip'),
+    subscribe: (email, name) => ipcRenderer.invoke('newsletter:subscribe', email, name),
+  },
   lut: {
     save: (text, name, where) => ipcRenderer.invoke('lut:save', text, name, where),
     editorsInstalled: () => ipcRenderer.invoke('editors:installed'),

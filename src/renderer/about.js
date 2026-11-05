@@ -58,6 +58,9 @@ $('icon').addEventListener('click', () => {
 });
 
 $('aRate').addEventListener('click', () => api.about.rate());
+$('aNews').addEventListener('click', () => api.about.newsletter());
+$('aTip').addEventListener('click', () => api.support.tip());
+api.support.config().then((c) => { $('aTip').hidden = !c.tip; });
 $('aUpdate').addEventListener('click', () => api.update.check());
 $('aSite').addEventListener('click', () => api.openUrl(SITE));
 $('aGitHub').addEventListener('click', () => api.openUrl(REPO));

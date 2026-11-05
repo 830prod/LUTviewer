@@ -10,6 +10,7 @@ const { execFile } = require('node:child_process');
 const { Readable } = require('node:stream');
 const LutParser = require('./renderer/lut.js');
 const updater = require('./updater.js');
+const support = require('./config.js');
 
 const SCHEME = 'lutv';
 const RENDERER_DIR = path.join(__dirname, 'renderer');
@@ -168,11 +169,36 @@ function exportFolder() {
   return home;
 }
 
+// ---------- Newsletter & tips ----------
+// Subscribe an address to the Mailchimp audience (only ever called when the user submits the form).
+async function subscribe(email, firstName) {
+  const addr = String(email || '').trim();
+  if (!/^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/.test(addr)) return { ok: false, msg: 'That email address doesn’t look right.' };
+  const { endpoint, u, id, f_id } = support.mailchimp;
+  const q = new URLSearchParams({ u, id, f_id, EMAIL: addr, c: 'cb' });
+  if (firstName) q.set('FNAME', String(firstName).trim().slice(0, 60));
+  try {
+    const res = await net.fetch(`${endpoint}?${q}`, { headers: { 'User-Agent': `LUTviewer/${app.getVersion()} (Macintosh)` } });
+    const text = await res.text();
+    const json = JSON.parse(text.slice(text.indexOf('(') + 1, text.lastIndexOf(')')));
+    if (json.result === 'success') return { ok: true };
+    const msg = String(json.msg || '').replace(/<[^>]+>/g, '').replace(/^\d+ - /, '');
+    if (/already subscribed/i.test(msg)) return { ok: true, already: true };
+    return { ok: false, msg: msg || 'Mailchimp couldn’t add that address.' };
+  } catch {
+    return { ok: false, msg: 'Couldn’t reach the mailing list. Check your connection and try again.' };
+  }
+}
+
+function openTip() {
+  if (/^https:\/\/(buy|donate)\.stripe\.com\//.test(support.tipUrl)) shell.openExternal(support.tipUrl);
+}
+
 // ---------- Windows ----------
 function showAbout() {
   if (aboutWin) { aboutWin.focus(); return; }
   aboutWin = new BrowserWindow({
-    width: 380, height: 560, resizable: false, minimizable: false, maximizable: false, fullscreenable: false,
+    width: 380, height: 610, resizable: false, minimizable: false, maximizable: false, fullscreenable: false,
     show: false, titleBarStyle: 'hiddenInset', trafficLightPosition: { x: 14, y: 14 },
     backgroundColor: '#021C30', title: 'About LUTviewer', parent: mainWin || undefined,
     webPreferences: { preload: path.join(__dirname, 'preload.js'), contextIsolation: true, sandbox: true },
@@ -425,6 +451,13 @@ function registerIpc() {
   ipcMain.handle('app:version', () => app.getVersion());
 
   ipcMain.handle('rating:send', (_e, stars) => sendRating(stars));
+  ipcMain.handle('support:config', () => ({ tip: /^https:\/\/(buy|donate)\.stripe\.com\//.test(support.tipUrl) }));
+  ipcMain.handle('support:tip', () => openTip());
+  ipcMain.handle('newsletter:subscribe', (_e, email, name) => subscribe(email, name));
+  ipcMain.handle('about:newsletter', () => {
+    if (aboutWin) aboutWin.close();
+    if (mainWin) { mainWin.show(); mainWin.focus(); mainWin.webContents.send('menu:newsletter'); }
+  });
   ipcMain.handle('about:info', () => {
     const st = getSettings();
     return {
@@ -541,6 +574,9 @@ function buildMenu() {
       role: 'help',
       submenu: [
         { label: 'Take the Tour', click: send('menu:tour') },
+        { type: 'separator' },
+        { label: 'Get Update Emails…', click: send('menu:newsletter') },
+        ...(/^https:\/\/(buy|donate)\.stripe\.com\//.test(support.tipUrl) ? [{ label: 'Leave a Tip ☕…', click: openTip }] : []),
         { type: 'separator' },
         { label: 'LUTviewer Website', click: () => shell.openExternal('https://830prod.github.io/LUTviewer/') },
         { label: 'Report an Issue…', click: () => shell.openExternal('https://github.com/830prod/LUTviewer/issues/new/choose') },

@@ -23,6 +23,7 @@
       --max: 1140px;
     }
     * { box-sizing: border-box; }
+    [hidden] { display: none !important; }
     html { scroll-behavior: smooth; }
     body {
       margin: 0; background: var(--ink-0); color: var(--ice);
@@ -143,6 +144,29 @@
     .thanks-close:hover { color: var(--ice); }
     @media (max-width: 520px) { .signup-row { flex-direction: column; } .thanks { right: 16px; bottom: 16px; } }
 
+    .news-band-wrap { padding: 40px 0 70px; }
+    .news-band {
+      position: relative; display: grid; grid-template-columns: auto 1fr; gap: 10px 26px; align-items: center;
+      padding: 34px 40px; border-radius: 22px; background: linear-gradient(135deg, var(--ink-2), var(--ink-1));
+      border: 1px solid var(--line); overflow: hidden;
+    }
+    .news-band::after { content: ""; position: absolute; right: -80px; top: -80px; width: 260px; height: 260px; border-radius: 50%; background: radial-gradient(circle, rgba(154,187,212,.18), transparent 70%); pointer-events: none; }
+    .news-band-reel { width: 120px; height: 120px; grid-row: span 2; filter: drop-shadow(0 10px 18px rgba(0,0,0,.4)); animation: bob 3s ease-in-out infinite; }
+    @keyframes bob { 0%, 100% { transform: translateY(0) rotate(0); } 50% { transform: translateY(-6px) rotate(-4deg); } }
+    .news-band h2 { margin: 0 0 6px; font-size: clamp(26px, 3vw, 34px); }
+    .news-band p { margin: 0; color: var(--muted); }
+    .signup.band { max-width: none; margin: 8px 0 0; }
+    .tip-band { display: grid; grid-template-columns: auto 1fr auto; gap: 24px; align-items: center; padding: 28px 34px; border-radius: 20px; background: var(--ink-1); border: 1px solid var(--line); }
+    .tip-band h2 { margin: 0 0 6px; font-size: 26px; }
+    .tip-band p { margin: 0; color: var(--muted); }
+    .tip-reel { width: 84px; height: 84px; }
+    @media (max-width: 760px) {
+      .news-band { grid-template-columns: 1fr; text-align: center; padding: 30px 22px; }
+      .news-band-reel { grid-row: auto; margin: 0 auto; width: 96px; height: 96px; }
+      .tip-band { grid-template-columns: 1fr; text-align: center; }
+      .tip-reel { margin: 0 auto; }
+    }
+
     footer { padding: 46px 0 60px; color: var(--muted); font-size: 14px; }
     footer .wrap { display: flex; justify-content: space-between; gap: 20px; flex-wrap: wrap; align-items: center; border-top: 1px solid var(--line); padding-top: 30px; }
     footer a { text-decoration: none; } footer a:hover { color: var(--ice); }
@@ -171,6 +195,8 @@
         <a class="hide-sm" href="#features">Features</a>
         <a class="hide-sm" href="#cameras">Cameras</a>
         <a class="hide-sm" href="#download">Download</a>
+        <a class="hide-sm" href="#newsletter">Newsletter</a>
+        <a class="hide-sm" href="#tip" data-tip-only hidden>Tip ☕</a>
         <a href="https://github.com/830prod/LUTviewer" aria-label="LUTviewer on GitHub"><svg class="gh-icon" viewBox="0 0 16 16"><path d="M8 0C3.58 0 0 3.58 0 8c0 3.54 2.29 6.53 5.47 7.59.4.07.55-.17.55-.38 0-.19-.01-.82-.01-1.49-2.01.37-2.53-.49-2.69-.94-.09-.23-.48-.94-.82-1.13-.28-.15-.68-.52-.01-.53.63-.01 1.08.58 1.23.82.72 1.21 1.87.87 2.33.66.07-.52.28-.87.51-1.07-1.78-.2-3.64-.89-3.64-3.95 0-.87.31-1.59.82-2.15-.08-.2-.36-1.02.08-2.12 0 0 .67-.21 2.2.82.64-.18 1.32-.27 2-.27.68 0 1.36.09 2 .27 1.53-1.04 2.2-.82 2.2-.82.44 1.1.16 1.92.08 2.12.51.56.82 1.27.82 2.15 0 3.07-1.87 3.75-3.65 3.95.29.25.54.73.54 1.48 0 1.07-.01 1.93-.01 2.2 0 .21.15.46.55.38A8.013 8.013 0 0016 8c0-4.42-3.58-8-8-8z"/></svg></a>
       </div>
     </div>
@@ -260,6 +286,26 @@
       </div>
     </section>
 
+    <section id="newsletter" class="news-band-wrap">
+      <div class="wrap">
+        <div class="news-band">
+          <img class="news-band-reel" src="reel-happy.svg" alt="Reel, the LUTviewer mascot">
+          <div class="news-band-text">
+            <h2>Be the first to know</h2>
+            <p>New cameras, new features, new tricks. Get an email when LUTviewer updates. No spam, unsubscribe anytime.</p>
+          </div>
+          <form class="signup band" action="https://830productions.us7.list-manage.com/subscribe/post?u=b01231c7b47a3fa57ae567f80&amp;id=142a8f8cf4&amp;f_id=00ab88e0f0" method="post" target="_blank" data-goatcounter-click="signup-band">
+            <div aria-hidden="true" style="position:absolute;left:-5000px"><input type="text" name="b_b01231c7b47a3fa57ae567f80_142a8f8cf4" tabindex="-1" value=""></div>
+            <div class="signup-row">
+              <input type="text" name="FNAME" placeholder="First name" autocomplete="given-name" aria-label="First name" class="fname">
+              <input type="email" name="EMAIL" placeholder="you@example.com" autocomplete="email" required aria-label="Email address">
+              <button class="btn btn-primary" type="submit">Notify me</button>
+            </div>
+          </form>
+        </div>
+      </div>
+    </section>
+
     <section id="cameras" style="background:linear-gradient(180deg,var(--ink-0),var(--ink-1) 50%,var(--ink-0))">
       <div class="wrap">
         <div class="section-head">
@@ -297,6 +343,19 @@
       </div>
     </section>
 
+    <section id="tip" data-tip-only hidden style="padding-bottom:20px">
+      <div class="wrap">
+        <div class="tip-band">
+          <img src="reel-wink.svg" alt="" class="tip-reel">
+          <div>
+            <h2>Enjoying LUTviewer?</h2>
+            <p>LUTviewer is free and always will be. If it saved you time on a project, you can leave a tip. Pay what you like, and it keeps the updates coming. 🎬</p>
+          </div>
+          <a class="btn btn-primary" id="tipButton" href="#" target="_blank" rel="noopener" data-goatcounter-click="tip">☕ Leave a tip</a>
+        </div>
+      </div>
+    </section>
+
     <section id="download" style="padding-top:20px">
       <div class="wrap">
         <div class="final">
@@ -329,6 +388,8 @@
       <div class="links">
         <a href="https://github.com/830prod/LUTviewer">GitHub</a>
         <a href="https://github.com/830prod/LUTviewer/releases">Releases</a>
+        <a href="#newsletter">Newsletter</a>
+        <a href="#tip" data-tip-only hidden>Leave a tip</a>
         <a href="https://github.com/830prod/LUTviewer/issues">Report an issue</a>
       </div>
     </div>
@@ -354,6 +415,12 @@
   <script>
     // After a download click, offer the (optional) update-email sign-up once.
     const thanks = document.getElementById('thanks');
+    // Stripe Payment Link for tips. Leave empty to hide the tip sections.
+    const TIP_URL = '';
+    if (/^https:\/\/(buy|donate)\.stripe\.com\//.test(TIP_URL)) {
+      document.querySelectorAll('[data-tip-only]').forEach((el) => { el.hidden = false; });
+      document.getElementById('tipButton').href = TIP_URL;
+    }
     const SIGNUP_ENABLED = true; // update emails go to the 830 Productions Mailchimp audience
     document.querySelectorAll('[data-download]').forEach((a) => a.addEventListener('click', () => {
       if (!SIGNUP_ENABLED) return;

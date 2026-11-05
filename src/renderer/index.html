@@ -225,6 +225,7 @@
         <p class="sheet-sub" id="exportStatus">Preparing…</p>
       </div>
       <div class="sheet-actions">
+        <button class="link-btn tip-link" id="btnExportTip" hidden>☕ Leave a tip</button>
         <button class="link-btn" id="btnExportCancel">Cancel</button>
         <button class="btn" id="btnExportGo">Export video</button>
       </div>
@@ -264,9 +265,31 @@
         <ol class="steps-list" id="bakeSteps"></ol>
       </div>
       <div class="sheet-actions">
+        <button class="link-btn tip-link" id="btnBakeTip" hidden>☕ Leave a tip</button>
         <button class="link-btn" id="btnBakeCancel">Cancel</button>
         <button class="btn" id="btnBakeGo">Add to Premiere</button>
       </div>
+    </div>
+  </div>
+
+  <!-- Newsletter card -->
+  <div class="news-card" id="newsCard" hidden role="dialog" aria-labelledby="newsTitle">
+    <button class="rate-close" id="newsClose" aria-label="Close">×</button>
+    <img class="news-reel" src="lutv://assets/reel/happy.svg" alt="">
+    <div id="newsAsk">
+      <b id="newsTitle">Want to hear about new features?</b>
+      <p>Get an email when LUTviewer gets an update. No spam, unsubscribe anytime.</p>
+      <form id="newsForm" class="news-form" novalidate>
+        <input type="text" id="newsName" placeholder="First name" autocomplete="given-name" aria-label="First name">
+        <input type="email" id="newsEmail" placeholder="you@example.com" autocomplete="email" aria-label="Email address" required>
+        <button class="btn small" type="submit" id="newsGo">Subscribe</button>
+      </form>
+      <p class="news-error" id="newsError" hidden></p>
+      <div class="rate-links"><button class="link-btn" id="newsNo">No thanks</button></div>
+    </div>
+    <div id="newsDone" hidden>
+      <b>You’re on the list! 🎬</b>
+      <p id="newsDoneText">Check your inbox to confirm your email.</p>
     </div>
   </div>
 

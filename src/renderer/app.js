@@ -773,6 +773,7 @@ function setExportPhase(phase) {
   $('btnExportGo').textContent = phase === 'done' ? 'Show in Finder' : phase === 'unsaved' ? 'Save video…' : 'Export video';
   $('btnExportCancel').textContent = phase === 'done' || phase === 'error' ? 'Done' : phase === 'unsaved' ? 'Discard' : 'Cancel';
   if (phase === 'error') $('btnExportGo').hidden = true;
+  $('btnExportTip').hidden = !(phase === 'done' && support.tip);
 }
 
 function openExport() {
@@ -803,6 +804,7 @@ function openExport() {
 function closeExport() {
   if (exportState.controller) exportState.controller.abort();
   $('exportSheet').hidden = true;
+  if (news.afterSheet) { news.afterSheet = false; setTimeout(() => showNewsletter(), 500); }
 }
 
 async function runExport() {
@@ -869,7 +871,10 @@ async function saveRendered() {
   }
   exportState.savedPath = saved;
   exportState.rendered = null;
-  api.settings.get().then((st) => saveSettings({ exportCount: (st.exportCount || 0) + 1 }));
+  api.settings.get().then((st) => {
+    saveSettings({ exportCount: (st.exportCount || 0) + 1 });
+    if (!st.exportCount) news.afterSheet = true;
+  });
   $('exportStatus').textContent = `Saved “${saved.split('/').pop()}”`;
   setExportPhase('done');
 }
@@ -927,6 +932,7 @@ function setBakePhase(phase) {
   $('bakeDone').hidden = phase !== 'done';
   $('btnBakeGo').textContent = phase === 'done' ? 'Show in Finder' : BAKE_ACTION[bakeState.dest];
   $('btnBakeCancel').textContent = phase === 'done' ? 'Done' : 'Cancel';
+  $('btnBakeTip').hidden = !(phase === 'done' && support.tip);
 }
 
 async function openBake() {
@@ -1105,6 +1111,7 @@ async function submitRating(n) {
     $('rateThanksTitle').textContent = 'Thank you! 🎬';
     $('rateThanksText').textContent = 'Would you also star LUTviewer on GitHub? It helps other filmmakers find it.';
     button('★ Star on GitHub', 'btn', () => { api.openUrl(REPO_URL); $('rateCard').hidden = true; });
+    if (support.tip) button('☕ Leave a tip', 'btn', () => { api.support.tip(); $('rateCard').hidden = true; });
   } else {
     $('rateThanksTitle').textContent = 'Thanks for the honest rating';
     $('rateThanksText').textContent = 'What would make LUTviewer better for you?';
@@ -1139,8 +1146,75 @@ function bindRating(s) {
     usage.seconds += TICK;
     saveSettings({ usageSeconds: usage.seconds });
     const busyNow = !$('exportSheet').hidden || !$('busy').hidden || !$('bakeSheet').hidden || Tour.isOpen();
-    if (!usage.done && usage.seconds >= usage.nextAt && $('rateCard').hidden && !busyNow) showRating();
+    if (!usage.done && usage.seconds >= usage.nextAt && $('rateCard').hidden && !busyNow && $('newsCard').hidden) showRating();
+    else if (usage.seconds >= NEWS_FALLBACK_SECONDS && !busyNow) showNewsletter();
   }, TICK * 1000);
+}
+
+// ---------- Newsletter & tips ----------
+const support = { tip: false };
+const news = { done: false, shownThisSession: false, afterSheet: false };
+const NEWS_FALLBACK_SECONDS = 10 * 60;
+
+function anythingOpen() {
+  return !$('rateCard').hidden || !$('newsCard').hidden || Tour.isOpen() || !$('exportSheet').hidden || !$('bakeSheet').hidden;
+}
+
+// Show the update-email card. Automatic prompts appear at most once per session and
+// never again after the user subscribes or says no thanks; the menu always shows it.
+function showNewsletter(force = false) {
+  if (!force && (news.done || news.shownThisSession || anythingOpen())) return false;
+  news.shownThisSession = true;
+  $('newsAsk').hidden = false;
+  $('newsDone').hidden = true;
+  $('newsError').hidden = true;
+  $('newsGo').disabled = false;
+  $('newsGo').textContent = 'Subscribe';
+  $('newsCard').hidden = false;
+  setTimeout(() => $('newsEmail').focus(), 60);
+  return true;
+}
+
+function bindNewsletter(s) {
+  news.done = !!s.newsletterDone;
+  $('newsForm').addEventListener('submit', async (e) => {
+    e.preventDefault();
+    const email = $('newsEmail').value.trim();
+    if (!/^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/.test(email)) {
+      $('newsError').textContent = 'Enter your email address so we can let you know.';
+      $('newsError').hidden = false;
+      return;
+    }
+    $('newsGo').disabled = true;
+    $('newsGo').textContent = 'Subscribing…';
+    const r = await api.support.subscribe(email, $('newsName').value);
+    if (!r.ok) {
+      $('newsError').textContent = r.msg;
+      $('newsError').hidden = false;
+      $('newsGo').disabled = false;
+      $('newsGo').textContent = 'Subscribe';
+      return;
+    }
+    news.done = true;
+    saveSettings({ newsletterDone: 'subscribed' });
+    $('newsDoneText').textContent = r.already ? 'You were already subscribed. Thanks for following along!' : 'Check your inbox to confirm your email.';
+    $('newsAsk').hidden = true;
+    $('newsDone').hidden = false;
+    setTimeout(() => { $('newsCard').hidden = true; }, 4500);
+  });
+  $('newsNo').addEventListener('click', () => {
+    news.done = true;
+    saveSettings({ newsletterDone: 'declined' });
+    $('newsCard').hidden = true;
+  });
+  $('newsClose').addEventListener('click', () => { $('newsCard').hidden = true; });
+  api.onMenu('newsletter', () => showNewsletter(true));
+
+  api.support.config().then((c) => {
+    support.tip = !!c.tip;
+  });
+  $('btnExportTip').addEventListener('click', () => api.support.tip());
+  $('btnBakeTip').addEventListener('click', () => api.support.tip());
 }
 
 // ---------- Guided tour ----------
@@ -1151,7 +1225,10 @@ function startTour() {
   if (Tour.isOpen()) return;
   for (const id of ['exportSheet', 'bakeSheet']) $(id).hidden = true;
   $('rateCard').hidden = true;
-  Tour.start(({ skipped, step }) => saveSettings({ tourSeen: TOUR_ID, tourSkippedAt: skipped ? step : null }));
+  Tour.start(({ skipped, step }) => {
+    saveSettings({ tourSeen: TOUR_ID, tourSkippedAt: skipped ? step : null });
+    if (!skipped) setTimeout(() => showNewsletter(), 700);
+  });
 }
 
 function bindTour(s) {
@@ -1217,6 +1294,7 @@ async function start() {
   bindUpdates();
   bindExport();
   bindBake();
+  bindNewsletter(s);
   bindTour(s);
   if (s.bakeSize) bakeState.size = String(s.bakeSize);
   if (BAKE_ACTION[s.bakeDest]) bakeState.dest = s.bakeDest;
