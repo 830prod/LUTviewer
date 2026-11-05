@@ -1115,9 +1115,28 @@ function bindRating(s) {
     if (!document.hasFocus() || document.hidden) return;
     usage.seconds += TICK;
     saveSettings({ usageSeconds: usage.seconds });
-    const busyNow = !$('exportSheet').hidden || !$('busy').hidden;
+    const busyNow = !$('exportSheet').hidden || !$('busy').hidden || !$('bakeSheet').hidden || Tour.isOpen();
     if (!usage.done && usage.seconds >= usage.nextAt && $('rateCard').hidden && !busyNow) showRating();
   }, TICK * 1000);
+}
+
+// ---------- Guided tour ----------
+// Bump when the tour changes, so everyone sees the new one once.
+const TOUR_ID = '2.3';
+
+function startTour() {
+  if (Tour.isOpen()) return;
+  for (const id of ['exportSheet', 'bakeSheet']) $(id).hidden = true;
+  $('rateCard').hidden = true;
+  Tour.start(({ skipped, step }) => saveSettings({ tourSeen: TOUR_ID, tourSkippedAt: skipped ? step : null }));
+}
+
+function bindTour(s) {
+  api.onMenu('tour', startTour);
+  if (s.tourSeen === TOUR_ID) return;
+  let started = false;
+  const go = () => { if (!started) { started = true; setTimeout(startTour, 500); } };
+  api.onShown(go);
 }
 
 // ---------- Startup ----------
@@ -1175,6 +1194,7 @@ async function start() {
   bindUpdates();
   bindExport();
   bindBake();
+  bindTour(s);
   if (s.bakeSize) bakeState.size = String(s.bakeSize);
   bindRating(s);
   api.onOpenPaths(handlePaths);

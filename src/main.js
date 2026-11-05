@@ -234,7 +234,7 @@ function boundsVisible(b) {
 function revealMain() {
   const wait = Math.max(0, SPLASH_MIN_MS - (Date.now() - splashShownAt));
   setTimeout(() => {
-    if (mainWin) { mainWin.show(); mainWin.focus(); }
+    if (mainWin) { mainWin.show(); mainWin.focus(); mainWin.webContents.send('app:shown'); }
     if (splashWin) splashWin.close();
     flushPendingOpen();
     if (!updaterStarted) { updaterStarted = true; updater.schedule(); }
@@ -530,6 +530,15 @@ function buildMenu() {
       ],
     },
     { role: 'windowMenu' },
+    {
+      role: 'help',
+      submenu: [
+        { label: 'Take the Tour', click: send('menu:tour') },
+        { type: 'separator' },
+        { label: 'LUTviewer Website', click: () => shell.openExternal('https://830prod.github.io/LUTviewer/') },
+        { label: 'Report an Issue…', click: () => shell.openExternal('https://github.com/830prod/LUTviewer/issues/new/choose') },
+      ],
+    },
   ]));
 }
 

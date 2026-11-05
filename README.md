@@ -50,6 +50,7 @@ Shooting log? Tell LUTviewer your camera and it converts the footage to Rec.709 
 - 🎬 **ProRes friendly.** ProRes clips get a quick preview copy made automatically with macOS's built-in tools.
 - 🎚 **Basic adjustments.** Exposure, contrast, highlights, shadows, saturation, temperature and tint, applied before the LUT so every thumbnail shows your corrections.
 - 🗂 **Tidy panel.** Camera, Adjust, LUT and Library are collapsible sections that show a summary when closed and remember how you left them.
+- 🎬 **Guided tour with Reel.** The 830 Productions film-reel character shows new users around on first launch. Skip it any time, or replay it from *Help → Take the Tour*.
 - 🎞 **Send to Premiere Pro.** Bake your camera conversion, adjustments and LUT into one `.cube` that shows up in Premiere's Lumetri *Input LUT* menu. It also works in Resolve and Final Cut.
 - 🎬 **Before / after video export.** Turn any clip or still into a shareable MP4 with an animated wipe, split screen or side by side, plus a small LUTviewer watermark.
 - 🔄 **Automatic updates.** LUTviewer checks GitHub for new versions and updates itself in one click (LUTviewer menu → *Check for Updates…*).
