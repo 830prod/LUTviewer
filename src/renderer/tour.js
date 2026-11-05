@@ -62,8 +62,8 @@
       target: '#btnBake',
       section: 'lut',
       face: 'happy',
-      title: 'Take it to Premiere',
-      text: 'Found the one? Send it to Premiere Pro as a single LUT, with your camera conversion and edits baked in.',
+      title: 'Take it to your editor',
+      text: 'Found the one? Export it as a single LUT for Premiere Pro or Final Cut Pro, with your camera conversion and edits baked in.',
     },
     {
       face: 'happy',

@@ -463,9 +463,14 @@ function registerIpc() {
   ipcMain.handle('lut:save', async (_e, text, name, where) => {
     const file = `${name.replace(/[\/:*?"<>|]+/g, '-').trim() || 'LUTviewer'}.cube`;
     let target;
-    if (where === 'premiere') {
-      // Premiere lists LUTs from this folder under Lumetri Color → Basic Correction → Input LUT.
-      const dir = path.join(os.homedir(), 'Library', 'Application Support', 'Adobe', 'Common', 'LUTs', 'Input');
+    // Premiere lists this folder under Lumetri Color → Basic Correction → Input LUT;
+    // Final Cut lists its folder in the Custom LUT effect's LUT pop-up.
+    const appDirs = {
+      premiere: ['Adobe', 'Common', 'LUTs', 'Input'],
+      finalcut: ['ProApps', 'Custom LUTs'],
+    };
+    if (appDirs[where]) {
+      const dir = path.join(os.homedir(), 'Library', 'Application Support', ...appDirs[where]);
       await fsp.mkdir(dir, { recursive: true });
       target = path.join(dir, file);
     } else {
@@ -480,8 +485,10 @@ function registerIpc() {
     await fsp.writeFile(target, text);
     return target;
   });
-  ipcMain.handle('premiere:installed', () => {
-    try { return fs.readdirSync('/Applications').some((n) => /^Adobe Premiere Pro/.test(n)); } catch { return false; }
+  ipcMain.handle('editors:installed', () => {
+    let apps = [];
+    try { apps = fs.readdirSync('/Applications'); } catch { /* unreadable */ }
+    return { premiere: apps.some((n) => /^Adobe Premiere Pro/.test(n)), finalcut: apps.some((n) => /^Final Cut Pro/.test(n)) };
   });
 }
 
@@ -513,7 +520,7 @@ function buildMenu() {
         { label: 'Open Footage…', accelerator: 'CmdOrCtrl+O', click: send('menu:open-media') },
         { label: 'Add LUTs…', accelerator: 'CmdOrCtrl+Shift+L', click: send('menu:add-luts') },
         { label: 'Export Before / After Video…', accelerator: 'CmdOrCtrl+E', click: send('menu:export') },
-        { label: 'Send LUT to Premiere Pro…', accelerator: 'CmdOrCtrl+Shift+E', click: send('menu:bake') },
+        { label: 'Export LUT for Premiere / Final Cut…', accelerator: 'CmdOrCtrl+Shift+E', click: send('menu:bake') },
         { type: 'separator' },
         { label: 'Show LUT Library in Finder', click: () => { fs.mkdirSync(lutDir(), { recursive: true }); shell.openPath(lutDir()); } },
         { type: 'separator' },

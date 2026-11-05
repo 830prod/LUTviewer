@@ -154,9 +154,9 @@
             <output id="intensityOut">100%</output>
           </div>
         </div>
-        <button class="send-btn" id="btnBake" title="Bake everything into one .cube for Premiere Pro (⇧⌘E)">
+        <button class="send-btn" id="btnBake" title="Bake everything into one .cube for Premiere Pro or Final Cut Pro (⇧⌘E)">
           <svg viewBox="0 0 20 20"><path d="M4 10h11M11 5.5L15.5 10 11 14.5"/><rect x="2.5" y="3" width="15" height="14" rx="2.5" opacity=".0"/></svg>
-          Send to Premiere Pro
+          Export LUT for Premiere / Final Cut
         </button>
       </div>
     </details>
@@ -234,9 +234,17 @@
   <!-- Send to Premiere (baked LUT) -->
   <div class="sheet-backdrop" id="bakeSheet" hidden>
     <div class="sheet" role="dialog" aria-labelledby="bakeTitle">
-      <h3 id="bakeTitle">Send to Premiere Pro</h3>
-      <p class="sheet-sub">Bakes everything you see into one LUT you can use in Premiere's Lumetri Color.</p>
+      <h3 id="bakeTitle">Export LUT</h3>
+      <p class="sheet-sub">Bakes everything you see into one LUT for your editor.</p>
       <div id="bakeForm">
+        <div class="sheet-field">
+          <span class="field-label">Send to</span>
+          <div class="seg dest-seg" id="bakeDest">
+            <button data-v="premiere">Premiere Pro</button>
+            <button data-v="finalcut">Final Cut Pro</button>
+            <button data-v="file">Save as file</button>
+          </div>
+        </div>
         <ol class="recipe" id="bakeRecipe"></ol>
         <label class="sheet-field">
           <span class="field-label">LUT name</span>
@@ -257,7 +265,6 @@
       </div>
       <div class="sheet-actions">
         <button class="link-btn" id="btnBakeCancel">Cancel</button>
-        <button class="link-btn" id="btnBakeSaveAs">Save As…</button>
         <button class="btn" id="btnBakeGo">Add to Premiere</button>
       </div>
     </div>

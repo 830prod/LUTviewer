@@ -348,3 +348,6 @@ details.library #search { flex: 1; width: auto; }
 .tour-card.center .tour-foot { flex-direction: column-reverse; gap: 12px; }
 .tour-card.center { padding-top: 40px; }
 .tour-card.center .tour-skip { top: 48px; }
+
+.dest-seg { display: flex; width: 100%; }
+.dest-seg button { flex: 1; font-size: 12px; padding: 6px 4px; }

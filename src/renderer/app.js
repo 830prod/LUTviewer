@@ -898,8 +898,9 @@ function bindExport() {
   }, true);
 }
 
-// ---------- Send to Premiere (baked LUT) ----------
-const bakeState = { phase: 'form', savedPath: null, size: '65' };
+// ---------- Export LUT for Premiere / Final Cut (baked LUT) ----------
+const bakeState = { phase: 'form', savedPath: null, size: '65', dest: null };
+const BAKE_ACTION = { premiere: 'Add to Premiere', finalcut: 'Add to Final Cut', file: 'Save LUT…' };
 
 // The footage pipeline, using the chosen camera even while the test chart is on screen.
 function bakeParams() {
@@ -924,12 +925,17 @@ function setBakePhase(phase) {
   bakeState.phase = phase;
   $('bakeForm').hidden = phase !== 'form';
   $('bakeDone').hidden = phase !== 'done';
-  $('btnBakeSaveAs').hidden = phase !== 'form';
-  $('btnBakeGo').textContent = phase === 'done' ? 'Show in Finder' : 'Add to Premiere';
+  $('btnBakeGo').textContent = phase === 'done' ? 'Show in Finder' : BAKE_ACTION[bakeState.dest];
   $('btnBakeCancel').textContent = phase === 'done' ? 'Done' : 'Cancel';
 }
 
-function openBake() {
+async function openBake() {
+  if (!bakeState.dest) {
+    // First time: default to whichever editor is installed.
+    const has = await api.lut.editorsInstalled().catch(() => ({}));
+    bakeState.dest = has.finalcut && !has.premiere ? 'finalcut' : 'premiere';
+  }
+  setSeg('bakeDest', bakeState.dest);
   const cam = camera();
   const entry = activeEntry();
   const list = $('bakeRecipe');
@@ -1006,17 +1012,27 @@ async function bakeAndSave(where) {
   steps.textContent = '';
   const step = (html) => { const li = document.createElement('li'); li.innerHTML = html; steps.append(li); };
   const esc = (t) => t.replace(/[&<>"]/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]));
+  const logTip = (app, how) => isLog && step(`<span class="tip">Use it on your <b>original log clips</b>. ${how} so ${app} doesn't convert the log too, or the image gets converted twice.</span>`);
   if (where === 'premiere') {
     $('bakeSaved').textContent = `✓ Added “${lutName}” to Premiere Pro`;
     step('If Premiere Pro is open, quit and reopen it so it finds the new LUT.');
     step(`Select your clips, then open <b>Lumetri Color → Basic Correction → Input LUT</b> and choose <b>${esc(lutName)}</b>.`);
+    logTip('Premiere', 'If Premiere is set to convert log footage automatically, turn that off for these clips (clip color settings)');
+    step('<span class="tip">Grade on top in Lumetri as usual.</span>');
+  } else if (where === 'finalcut') {
+    $('bakeSaved').textContent = `✓ Added “${lutName}” to Final Cut Pro`;
+    step('If Final Cut Pro is open, quit and reopen it so it finds the new LUT.');
+    step('Open the <b>Effects browser → Color</b> and drag <b>Custom LUT</b> onto your clips.');
+    step(`In the <b>Video inspector</b>, open the Custom LUT effect's <b>LUT</b> pop-up and choose <b>${esc(lutName)}</b>.`);
+    logTip('Final Cut', 'In the clip\'s <b>Info inspector</b>, set <b>Camera LUT</b> (log conversion) to <b>None</b>');
+    step('<span class="tip">If the effect offers color-space conversion, leave it off, since LUTviewer already did the conversion. Then grade on top as usual.</span>');
   } else {
     $('bakeSaved').textContent = `✓ Saved “${file}”`;
-    step('In Premiere Pro: <b>Lumetri Color → Basic Correction → Input LUT → Browse…</b> and pick this file.');
-    step('<span class="tip">Also works in DaVinci Resolve (LUTs folder) and Final Cut Pro (Custom LUT effect).</span>');
+    step('<b>Premiere Pro:</b> Lumetri Color → Basic Correction → Input LUT → Browse… and pick this file.');
+    step('<b>Final Cut Pro:</b> add the <b>Custom LUT</b> effect (Effects → Color), then LUT pop-up → Choose Custom LUT… and pick this file.');
+    step('<b>DaVinci Resolve:</b> right-click a node → LUT, after copying the file into Resolve\'s LUT folder.');
+    if (isLog) step('<span class="tip">Use it on your original log clips, with your editor\'s own automatic log conversion turned off for them.</span>');
   }
-  if (isLog) step('<span class="tip">Use it on the original log clips, and make sure Premiere isn\'t also converting them automatically (clip color settings → no log conversion), or the image will be converted twice.</span>');
-  step('<span class="tip">Grade on top in Lumetri as usual.</span>');
   setBakePhase('done');
 }
 
@@ -1030,16 +1046,23 @@ function bindBake() {
     setSeg('bakeSize', b.dataset.v);
     saveSettings({ bakeSize: b.dataset.v });
   });
+  $('bakeDest').addEventListener('click', (e) => {
+    const b = e.target.closest('button');
+    if (!b) return;
+    bakeState.dest = b.dataset.v;
+    setSeg('bakeDest', b.dataset.v);
+    $('btnBakeGo').textContent = BAKE_ACTION[bakeState.dest];
+    saveSettings({ bakeDest: b.dataset.v });
+  });
   $('btnBakeCancel').addEventListener('click', () => { $('bakeSheet').hidden = true; });
-  $('btnBakeSaveAs').addEventListener('click', () => bakeAndSave('choose'));
   $('btnBakeGo').addEventListener('click', () => {
     if (bakeState.phase === 'done') api.exportVideo.reveal(bakeState.savedPath);
-    else bakeAndSave('premiere');
+    else bakeAndSave(bakeState.dest);
   });
   document.addEventListener('keydown', (e) => {
     if ($('bakeSheet').hidden) return;
     if (e.key === 'Escape') $('bakeSheet').hidden = true;
-    if (e.key === 'Enter' && bakeState.phase === 'form') bakeAndSave('premiere');
+    if (e.key === 'Enter' && bakeState.phase === 'form') bakeAndSave(bakeState.dest);
     e.stopImmediatePropagation();
   }, true);
 }
@@ -1196,6 +1219,7 @@ async function start() {
   bindBake();
   bindTour(s);
   if (s.bakeSize) bakeState.size = String(s.bakeSize);
+  if (BAKE_ACTION[s.bakeDest]) bakeState.dest = s.bakeDest;
   bindRating(s);
   api.onOpenPaths(handlePaths);
   api.onMenu('open-media', chooseMedia);

@@ -51,7 +51,7 @@ Shooting log? Tell LUTviewer your camera and it converts the footage to Rec.709 
 - 🎚 **Basic adjustments.** Exposure, contrast, highlights, shadows, saturation, temperature and tint, applied before the LUT so every thumbnail shows your corrections.
 - 🗂 **Tidy panel.** Camera, Adjust, LUT and Library are collapsible sections that show a summary when closed and remember how you left them.
 - 🎬 **Guided tour with Reel.** The 830 Productions film-reel character shows new users around on first launch. Skip it any time, or replay it from *Help → Take the Tour*.
-- 🎞 **Send to Premiere Pro.** Bake your camera conversion, adjustments and LUT into one `.cube` that shows up in Premiere's Lumetri *Input LUT* menu. It also works in Resolve and Final Cut.
+- 🎞 **Export to Premiere Pro or Final Cut Pro.** Bake your camera conversion, adjustments and LUT into one `.cube` that shows up straight in Premiere's *Input LUT* menu or Final Cut's *Custom LUT* effect.
 - 🎬 **Before / after video export.** Turn any clip or still into a shareable MP4 with an animated wipe, split screen or side by side, plus a small LUTviewer watermark.
 - 🔄 **Automatic updates.** LUTviewer checks GitHub for new versions and updates itself in one click (LUTviewer menu → *Check for Updates…*).
 - 🔒 **Private.** Your footage and LUTs never leave your Mac. The only thing ever sent is a star rating, and only if you choose to give one.
@@ -108,21 +108,27 @@ LUTviewer guesses the type from the file name (anything mentioning S-Log, C-Log,
 | <kbd>0</kbd> | No LUT |
 | <kbd>⌘</kbd> <kbd>O</kbd> | Open footage |
 | <kbd>⌘</kbd> <kbd>E</kbd> | Export before / after video |
-| <kbd>⇧</kbd> <kbd>⌘</kbd> <kbd>E</kbd> | Send LUT to Premiere Pro |
+| <kbd>⇧</kbd> <kbd>⌘</kbd> <kbd>E</kbd> | Export LUT for Premiere / Final Cut |
 | <kbd>⇧</kbd> <kbd>⌘</kbd> <kbd>L</kbd> | Add LUTs |
 | <kbd>⇧</kbd> <kbd>⌘</kbd> <kbd>D</kbd> | Dock window to the right edge |
 
-## Send to Premiere Pro
+## Export a LUT for Premiere Pro or Final Cut Pro
 
-Found your look? Click **Send to Premiere Pro** in the LUT section (or press <kbd>⇧</kbd> <kbd>⌘</kbd> <kbd>E</kbd>). LUTviewer bakes **everything you see** into one `.cube` LUT:
+Found your look? Click **Export LUT for Premiere / Final Cut** in the LUT section (or press <kbd>⇧</kbd> <kbd>⌘</kbd> <kbd>E</kbd>). LUTviewer bakes **everything you see** into one `.cube` LUT:
 
 - the camera log → Rec.709 conversion (and Filmic / Clip roll-off)
 - your Adjust sliders (exposure, contrast, temperature…)
 - the LUT, at your Mix amount
 
-**Add to Premiere** puts it in `~/Library/Application Support/Adobe/Common/LUTs/Input`. Restart Premiere, then pick it under **Lumetri Color → Basic Correction → Input LUT**. Or use **Save As…** to save the file anywhere. It also works in DaVinci Resolve and Final Cut Pro (Custom LUT effect).
+Choose where it goes:
 
-> Apply it to your **original log clips**, and make sure Premiere isn't also converting them automatically, or the image gets converted twice. **High (65³)** quality matches LUTviewer's preview most closely.
+| Send to | Where it's saved | How to use it |
+| --- | --- | --- |
+| **Premiere Pro** | `~/Library/Application Support/Adobe/Common/LUTs/Input` | Restart Premiere, then **Lumetri Color → Basic Correction → Input LUT** and pick it. |
+| **Final Cut Pro** | `~/Library/Application Support/ProApps/Custom LUTs` | Restart Final Cut, drag **Effects → Color → Custom LUT** onto your clips, then pick it from the effect's **LUT** pop-up in the Video inspector. |
+| **Save as file** | Anywhere you choose | Load it in any editor that reads `.cube` files, including DaVinci Resolve. |
+
+> Apply it to your **original log clips**, with the editor's own automatic log conversion turned off for those clips (in Final Cut: Info inspector → **Camera LUT: None**), or the image gets converted twice. **High (65³)** quality matches LUTviewer's preview most closely.
 
 ## Before / after export
 
