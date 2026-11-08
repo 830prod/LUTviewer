@@ -65,7 +65,7 @@ contextBridge.exposeInMainWorld('lutviewer', {
   },
   openUrl: (url) => ipcRenderer.invoke('shell:open-url', url),
   exportVideo: {
-    save: (data, name) => ipcRenderer.invoke('export:save', data, name),
+    save: (data, name, ext) => ipcRenderer.invoke('export:save', data, name, ext),
     reveal: (p) => ipcRenderer.invoke('shell:reveal', p),
   },
 });

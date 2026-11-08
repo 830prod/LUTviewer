@@ -45,23 +45,17 @@
     });
   }
 
-  /**
-   * opts: {
-   *   source: { kind, el }, params (render params incl. camera/tone/…), lutId, lut (parsed table),
-   *   lutName, layout: 'wipe'|'split'|'side', beforeRaw, length (seconds or 'full'), labels,
-   *   onProgress(fraction), signal: AbortSignal
-   * }
-   * Resolves with the MP4 file as a Uint8Array.
+  /*
+   * Builds the frame compositor shared by video and image export: a WebGL renderer
+   * for the before / after layout plus a 2D canvas for labels and the watermark.
+   * layout: 'wipe' | 'split' | 'side' | 'after'. watermark: 'full' | 'icon' | 'text'.
    */
-  async function exportBeforeAfter(opts) {
-    const { source, layout, signal } = opts;
+  async function createCompositor(opts, paneMax) {
+    const { source, layout } = opts;
     const el = source.el;
     const srcW = el.videoWidth || el.naturalWidth || el.width;
     const srcH = el.videoHeight || el.naturalHeight || el.height;
     if (!srcW || !srcH) throw new Error('Nothing to export yet');
-
-    // Output size: panes up to 1920 wide (1280 each when side by side).
-    const paneMax = layout === 'side' ? 1280 : 1920;
     const scale = Math.min(1, paneMax / srcW);
     const paneW = even(srcW * scale);
     const H = even(srcH * scale);
@@ -77,27 +71,9 @@
     out.width = W;
     out.height = H;
     const ctx = out.getContext('2d', { alpha: false });
-    const icon = await loadImage('lutv://assets/app-icon.png').catch(() => null);
-
-    const fps = source.kind === 'video' ? 30 : FPS_STILL;
-    const bitrate = Math.min(40e6, Math.max(6e6, Math.round(W * H * fps * 0.14)));
-    const config = await pickCodec(W, H, bitrate, fps);
-
-    const muxer = new root.Mp4Muxer.Muxer({
-      target: new root.Mp4Muxer.ArrayBufferTarget(),
-      video: { codec: 'avc', width: W, height: H, frameRate: fps },
-      fastStart: 'in-memory',
-      firstTimestampBehavior: 'offset',
-    });
-    let encodeError = null;
-    const encoder = new VideoEncoder({
-      output: (chunk, meta) => muxer.addVideoChunk(chunk, meta),
-      error: (e) => { encodeError = e; },
-    });
-    encoder.configure(config);
-
+    const watermark = opts.watermark || 'full';
+    const icon = watermark === 'text' ? null : await loadImage('lutv://assets/app-icon.png').catch(() => null);
     const p = { ...opts.params, lutId: opts.lutId, beforeRaw: opts.beforeRaw, showOriginal: false };
-    let lastKey = -Infinity;
 
     function drawLabel(text, x, y, align) {
       const fs = Math.max(12, Math.round(H * 0.03));
@@ -116,38 +92,46 @@
       ctx.letterSpacing = '0px';
     }
 
+    // Bottom-right mark: icon + name, the .lut icon alone, or just the name.
     function drawWatermark() {
       const m = Math.round(H * 0.03);
-      const s = Math.round(H * 0.055);
+      const s = Math.round(H * (watermark === 'icon' ? 0.07 : 0.055));
       const fs = Math.round(s * 0.46);
+      const showIcon = watermark !== 'text' && icon;
+      const showText = watermark !== 'icon';
       ctx.save();
-      ctx.globalAlpha = 0.88;
-      ctx.shadowColor = 'rgba(0, 0, 0, 0.45)';
-      ctx.shadowBlur = s * 0.25;
       ctx.font = `700 ${fs}px -apple-system, "SF Pro Display", sans-serif`;
       const lutW = ctx.measureText('LUT').width;
       ctx.font = `300 ${fs}px -apple-system, "SF Pro Display", sans-serif`;
       const viewerW = ctx.measureText('viewer').width;
-      const textW = lutW + viewerW;
-      const gap = s * 0.3;
+      const textW = showText ? lutW + viewerW : 0;
+      const gap = showIcon && showText ? s * 0.3 : 0;
+      const iconW = showIcon ? s : 0;
       const pad = s * 0.18;
-      const x0 = W - m - pad - s - gap - textW;
+      const padX = showIcon ? pad : s * 0.4;
+      const contentW = iconW + gap + textW;
+      const x0 = W - m - padX - contentW;
       const y0 = H - m - pad - s;
-      // Soft pill behind the mark so it reads on bright and dark footage alike.
-      ctx.save();
-      ctx.shadowColor = 'transparent';
-      ctx.fillStyle = 'rgba(2, 28, 48, 0.5)';
-      ctx.beginPath();
-      ctx.roundRect(x0 - pad, y0 - pad, s + gap + textW + pad * 2.4, s + pad * 2, (s + pad * 2) / 2.6);
-      ctx.fill();
-      ctx.restore();
-      if (icon) ctx.drawImage(icon, x0, y0, s, s);
-      ctx.fillStyle = '#FFFFFF';
-      ctx.textBaseline = 'middle';
-      ctx.font = `700 ${fs}px -apple-system, "SF Pro Display", sans-serif`;
-      ctx.fillText('LUT', x0 + s + gap, y0 + s / 2);
-      ctx.font = `300 ${fs}px -apple-system, "SF Pro Display", sans-serif`;
-      ctx.fillText('viewer', x0 + s + gap + lutW, y0 + s / 2);
+      ctx.globalAlpha = 0.9;
+      // Soft pill behind text so it reads on bright and dark footage alike (the icon tile carries its own).
+      if (showText) {
+        ctx.fillStyle = 'rgba(2, 28, 48, 0.5)';
+        ctx.beginPath();
+        ctx.roundRect(x0 - padX, y0 - pad, contentW + padX * (showIcon ? 2.4 : 2), s + pad * 2, (s + pad * 2) / 2.6);
+        ctx.fill();
+      }
+      ctx.shadowColor = 'rgba(0, 0, 0, 0.45)';
+      ctx.shadowBlur = s * 0.25;
+      if (showIcon) ctx.drawImage(icon, x0, y0, s, s);
+      if (showText) {
+        const tx = x0 + iconW + gap;
+        ctx.fillStyle = '#FFFFFF';
+        ctx.textBaseline = 'middle';
+        ctx.font = `700 ${fs}px -apple-system, "SF Pro Display", sans-serif`;
+        ctx.fillText('LUT', tx, y0 + s / 2);
+        ctx.font = `300 ${fs}px -apple-system, "SF Pro Display", sans-serif`;
+        ctx.fillText('viewer', tx + lutW, y0 + s / 2);
+      }
       ctx.restore();
     }
 
@@ -155,6 +139,8 @@
       if (layout === 'side') {
         r.render({ ...p, split: -1, showOriginal: true }, [0, 0, paneW, H]);
         r.render({ ...p, split: -1 }, [paneW, 0, paneW, H]);
+      } else if (layout === 'after') {
+        r.render({ ...p, split: -1 });
       } else {
         const pos = layout === 'wipe' ? 0.5 - 0.4 * Math.cos((2 * Math.PI * t) / WIPE_PERIOD) : 0.5;
         r.render({ ...p, split: pos });
@@ -170,6 +156,8 @@
         if (layout === 'side') {
           drawLabel('BEFORE', m, m, 'left');
           drawLabel(after, paneW + m, m, 'left');
+        } else if (layout === 'after') {
+          drawLabel(opts.lutName ? opts.lutName.toUpperCase() : 'GRADED', m, m, 'left');
         } else {
           drawLabel('BEFORE', m, m, 'left');
           drawLabel(after, W - m, m, 'right');
@@ -177,6 +165,68 @@
       }
       drawWatermark();
     }
+
+    function dispose() {
+      const lose = r.gl.getExtension('WEBGL_lose_context');
+      if (lose) lose.loseContext();
+    }
+
+    return { W, H, out, r, compose, dispose };
+  }
+
+  /**
+   * Still image of the current frame. opts as for exportBeforeAfter, plus
+   * format: 'png' | 'jpeg'. Full resolution (up to 3840 px per pane).
+   * Resolves with { data: Uint8Array, width, height }.
+   */
+  async function exportStill(opts) {
+    const comp = await createCompositor(opts, 3840);
+    try {
+      if (!comp.r.upload(opts.source.el)) throw new Error('Nothing to export yet');
+      comp.compose(0);
+      const type = opts.format === 'jpeg' ? 'image/jpeg' : 'image/png';
+      const blob = await new Promise((res) => comp.out.toBlob(res, type, 0.93));
+      if (!blob) throw new Error('Couldn’t encode the image');
+      return { data: new Uint8Array(await blob.arrayBuffer()), width: comp.W, height: comp.H };
+    } finally {
+      comp.dispose();
+    }
+  }
+
+  /**
+   * opts: {
+   *   source: { kind, el }, params (render params incl. camera/tone/…), lutId, lut (parsed table),
+   *   lutName, layout: 'wipe'|'split'|'side', beforeRaw, length (seconds or 'full'), labels,
+   *   onProgress(fraction), signal: AbortSignal
+   * }
+   * Resolves with the MP4 file as a Uint8Array.
+   */
+  async function exportBeforeAfter(opts) {
+    const { source, layout, signal } = opts;
+    const el = source.el;
+
+    // Output size: panes up to 1920 wide (1280 each when side by side).
+    const comp = await createCompositor(opts, layout === 'side' ? 1280 : 1920);
+    const { W, H, out, r, compose } = comp;
+
+    const fps = source.kind === 'video' ? 30 : FPS_STILL;
+    const bitrate = Math.min(40e6, Math.max(6e6, Math.round(W * H * fps * 0.14)));
+    const config = await pickCodec(W, H, bitrate, fps);
+
+    const muxer = new root.Mp4Muxer.Muxer({
+      target: new root.Mp4Muxer.ArrayBufferTarget(),
+      video: { codec: 'avc', width: W, height: H, frameRate: fps },
+      fastStart: 'in-memory',
+      firstTimestampBehavior: 'offset',
+    });
+    let encodeError = null;
+    const encoder = new VideoEncoder({
+      output: (chunk, meta) => muxer.addVideoChunk(chunk, meta),
+      error: (e) => { encodeError = e; },
+    });
+    encoder.configure(config);
+
+    let lastKey = -Infinity;
 
     function encodeFrame(t, duration) {
       if (encodeError) throw encodeError;
@@ -260,5 +310,5 @@
     }
   }
 
-  root.Exporter = { exportBeforeAfter };
+  root.Exporter = { exportBeforeAfter, exportStill };
 })(window);

@@ -480,11 +480,17 @@ function registerIpc() {
     if (/^https:\/\/(github\.com\/830prod\/LUTviewer|830prod\.github\.io\/LUTviewer)(\/|$)/.test(url)) shell.openExternal(url);
   });
 
-  ipcMain.handle('export:save', async (_e, data, suggested) => {
+  ipcMain.handle('export:save', async (_e, data, suggested, ext = 'mp4') => {
+    const kinds = {
+      mp4: { title: 'Save before / after video', filter: { name: 'MP4 video', extensions: ['mp4'] } },
+      png: { title: 'Save image', filter: { name: 'PNG image', extensions: ['png'] } },
+      jpg: { title: 'Save image', filter: { name: 'JPEG image', extensions: ['jpg', 'jpeg'] } },
+    };
+    const kind = kinds[ext] || kinds.mp4;
     const r = await dialog.showSaveDialog(mainWin, {
-      title: 'Save before / after video',
+      title: kind.title,
       defaultPath: path.join(exportFolder(), suggested.replace(/[\/:*?"<>|]+/g, '-')),
-      filters: [{ name: 'MP4 video', extensions: ['mp4'] }],
+      filters: [kind.filter],
     });
     if (r.canceled || !r.filePath) return null;
     await fsp.writeFile(r.filePath, Buffer.from(data));
@@ -552,7 +558,7 @@ function buildMenu() {
       submenu: [
         { label: 'Open Footage…', accelerator: 'CmdOrCtrl+O', click: send('menu:open-media') },
         { label: 'Add LUTs…', accelerator: 'CmdOrCtrl+Shift+L', click: send('menu:add-luts') },
-        { label: 'Export Before / After Video…', accelerator: 'CmdOrCtrl+E', click: send('menu:export') },
+        { label: 'Export Before / After…', accelerator: 'CmdOrCtrl+E', click: send('menu:export') },
         { label: 'Export LUT for Premiere / Final Cut…', accelerator: 'CmdOrCtrl+Shift+E', click: send('menu:bake') },
         { type: 'separator' },
         { label: 'Show LUT Library in Finder', click: () => { fs.mkdirSync(lutDir(), { recursive: true }); shell.openPath(lutDir()); } },

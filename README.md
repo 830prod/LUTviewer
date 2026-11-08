@@ -52,7 +52,7 @@ Shooting log? Tell LUTviewer your camera and it converts the footage to Rec.709 
 - 🗂 **Tidy panel.** Camera, Adjust, LUT and Library are collapsible sections that show a summary when closed and remember how you left them.
 - 🎬 **Guided tour with Reel.** The 830 Productions film-reel character shows new users around on first launch. Skip it any time, or replay it from *Help → Take the Tour*.
 - 🎞 **Export to Premiere Pro or Final Cut Pro.** Bake your camera conversion, adjustments and LUT into one `.cube` that shows up straight in Premiere's *Input LUT* menu or Final Cut's *Custom LUT* effect.
-- 🎬 **Before / after video export.** Turn any clip or still into a shareable MP4 with an animated wipe, split screen or side by side, plus a small LUTviewer watermark.
+- 🎬 **Before / after export.** Turn any clip or still into a shareable MP4 or a PNG / JPEG image: animated wipe, split, side by side or after only, with your choice of LUTviewer watermark.
 - 🔄 **Automatic updates.** LUTviewer checks GitHub for new versions and updates itself in one click (LUTviewer menu → *Check for Updates…*).
 - 🔒 **Private.** Your footage and LUTs never leave your Mac. The only things ever sent are a star rating and your email for update news, and only if you choose to give them.
 
@@ -107,7 +107,7 @@ LUTviewer guesses the type from the file name (anything mentioning S-Log, C-Log,
 | <kbd>F</kbd> | Favorite current LUT |
 | <kbd>0</kbd> | No LUT |
 | <kbd>⌘</kbd> <kbd>O</kbd> | Open footage |
-| <kbd>⌘</kbd> <kbd>E</kbd> | Export before / after video |
+| <kbd>⌘</kbd> <kbd>E</kbd> | Export before / after video or image |
 | <kbd>⇧</kbd> <kbd>⌘</kbd> <kbd>E</kbd> | Export LUT for Premiere / Final Cut |
 | <kbd>⇧</kbd> <kbd>⌘</kbd> <kbd>L</kbd> | Add LUTs |
 | <kbd>⇧</kbd> <kbd>⌘</kbd> <kbd>D</kbd> | Dock window to the right edge |
@@ -134,15 +134,16 @@ Choose where it goes:
 
 <p align="center"><img src="docs/export-example.jpg" alt="Example before / after export with the Kodachrome LUT" width="80%"></p>
 
-Click the **export** button under the preview (or press <kbd>⌘</kbd> <kbd>E</kbd>) to make a short MP4:
+Click the **export** button under the preview (or press <kbd>⌘</kbd> <kbd>E</kbd>) and choose **Video** (MP4) or **Image** (PNG or JPEG):
 
-| Layout | What you get |
-| --- | --- |
-| **Wipe** | A divider sweeps back and forth across the frame. The most eye-catching option for social posts. |
-| **Split** | Before on the left, after on the right. |
-| **Side by side** | The full frame twice, before next to after. |
+| Layout | Video | Image |
+| --- | --- | --- |
+| **Wipe**: a divider sweeps back and forth | ✓ | |
+| **Split**: before left, after right | ✓ | ✓ |
+| **Side by side**: the full frame twice | ✓ | ✓ |
+| **After only**: just the graded frame | ✓ | ✓ |
 
-Choose a length (from the playhead, or the whole clip), toggle the *Before / After* labels, and for log footage choose whether "before" shows the original log image or the Rec.709 conversion. A small LUTviewer watermark is added in the bottom corner. Exports are H.264 MP4 files, encoded on your Mac's hardware.
+Pick a **watermark** for the bottom corner: **Icon + name**, the **.lut icon** on its own, or just the **LUTviewer** name. You can also toggle the *Before / After* labels, and for log footage choose whether "before" shows the original log image or the Rec.709 conversion. Videos are H.264 MP4s encoded on your Mac's hardware (choose a length from the playhead, or the whole clip). Images are saved at full resolution.
 
 ## Supported files
 

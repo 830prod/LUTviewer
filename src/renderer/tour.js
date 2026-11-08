@@ -56,7 +56,7 @@
       target: '.transport',
       face: 'suspicious',
       title: 'Before vs. after',
-      text: 'Use the split button (or press S) to compare, then the export button to make a before / after video you can share.',
+      text: 'Use the split button (or press S) to compare, then the export button to save a before / after video or image you can share.',
     },
     {
       target: '#btnBake',

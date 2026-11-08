@@ -370,3 +370,16 @@ details.library #search { flex: 1; width: auto; }
 .news-error { color: #FF9C8F !important; }
 .news-card .rate-links { justify-content: flex-start; }
 .tip-link { display: inline-flex; align-items: center; gap: 4px; }
+
+/* ---------- Export: kind, format, watermark ---------- */
+.kind-row { align-items: flex-start; }
+.kind-row .sheet-field { flex: none; min-width: 0; }
+.lay-after { background: #d9875a; }
+.wm-seg { display: flex; width: 100%; }
+.wm-seg button { flex: 1; display: flex; flex-direction: column; align-items: center; gap: 6px; padding: 8px 4px; }
+.wm { position: relative; width: 58px; height: 30px; border-radius: 4px; background: #4a5d6b; box-shadow: 0 0 0 1px rgba(233,245,253,.2); display: block; font-style: normal; }
+.wm::after { content: ""; position: absolute; right: 4px; bottom: 4px; }
+.wm-full::after { width: 30px; height: 9px; border-radius: 5px; background: rgba(2,28,48,.7) url(lutv://assets/app-icon.png) 1px center / 7px 7px no-repeat; }
+.wm-icon::after { width: 11px; height: 11px; background: url(lutv://assets/app-icon.png) center / contain no-repeat; }
+.wm-text { font-size: 6px; font-weight: 700; color: #fff; text-align: right; line-height: 30px; padding-right: 5px; letter-spacing: 0; }
+.wm-text::after { display: none; }

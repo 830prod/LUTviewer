@@ -754,7 +754,20 @@ function bindUpdates() {
 }
 
 // ---------- Before / after export ----------
-const exportState = { controller: null, savedPath: null, phase: 'form' };
+const exportState = { controller: null, savedPath: null, phase: 'form', kind: 'video', format: 'png', watermark: 'full' };
+const segValue = (id, fallback) => [...$(id).children].find((b) => b.classList.contains('on'))?.dataset.v || fallback;
+
+// Show only the options that apply to a video or an image export.
+function updateExportForm() {
+  const image = exportState.kind === 'image';
+  $('exportFormatField').hidden = !image;
+  $('exportLengthField').hidden = image;
+  const wipe = $('exportLayout').querySelector('[data-v="wipe"]');
+  wipe.hidden = image;
+  if (image && segValue('exportLayout', 'wipe') === 'wipe') setSeg('exportLayout', 'split');
+  $('exportTitle').textContent = image ? 'Export image' : 'Export video';
+  if (exportState.phase === 'form') $('btnExportGo').textContent = image ? 'Export image' : 'Export video';
+}
 
 function exportLengths() {
   const src = state.source;
@@ -770,7 +783,7 @@ function setExportPhase(phase) {
   $('exportForm').hidden = phase !== 'form';
   $('exportProgress').hidden = phase === 'form';
   $('btnExportGo').hidden = phase === 'running';
-  $('btnExportGo').textContent = phase === 'done' ? 'Show in Finder' : phase === 'unsaved' ? 'Save video…' : 'Export video';
+  $('btnExportGo').textContent = phase === 'done' ? 'Show in Finder' : phase === 'unsaved' ? 'Save…' : exportState.kind === 'image' ? 'Export image' : 'Export video';
   $('btnExportCancel').textContent = phase === 'done' || phase === 'error' ? 'Done' : phase === 'unsaved' ? 'Discard' : 'Cancel';
   if (phase === 'error') $('btnExportGo').hidden = true;
   $('btnExportTip').hidden = !(phase === 'done' && support.tip);
@@ -780,13 +793,16 @@ function openExport() {
   const src = state.source;
   const entry = activeEntry();
   if (!src) return;
-  if (!entry || state.broken.has(entry.id)) { toast('Pick a LUT first, so the video has an “after”.'); return; }
+  if (!entry || state.broken.has(entry.id)) { toast('Pick a LUT first, so the export has an “after”.'); return; }
   if (src.kind === 'video' && !src.el.paused) src.el.pause();
   const cam = effectiveCamera();
   $('exportSub').textContent = `${src.kind === 'chart' ? 'Test chart' : src.name} · ${entry.name}`;
   $('exportBeforeField').hidden = cam.curve === 'none';
   setSeg('exportBefore', exportState.before || 'raw');
   setSeg('exportLayout', exportState.layout || 'wipe');
+  setSeg('exportKind', exportState.kind);
+  setSeg('exportFormat', exportState.format);
+  setSeg('exportWatermark', exportState.watermark);
   const { options, def } = exportLengths();
   const sel = $('exportLength');
   sel.textContent = '';
@@ -798,6 +814,7 @@ function openExport() {
   }
   sel.value = String(def);
   setExportPhase('form');
+  updateExportForm();
   $('exportSheet').hidden = false;
 }
 
@@ -810,19 +827,21 @@ function closeExport() {
 async function runExport() {
   const src = state.source;
   const entry = activeEntry();
-  const layout = [...$('exportLayout').children].find((b) => b.classList.contains('on'))?.dataset.v || 'wipe';
-  const before = [...$('exportBefore').children].find((b) => b.classList.contains('on'))?.dataset.v || 'raw';
+  const layout = segValue('exportLayout', 'wipe');
+  const before = segValue('exportBefore', 'raw');
+  const image = exportState.kind === 'image';
   exportState.layout = layout;
   exportState.before = before;
+  saveSettings({ exportPrefs: { kind: exportState.kind, format: exportState.format, watermark: exportState.watermark, layout, before } });
   const lengthVal = $('exportLength').value;
   setExportPhase('running');
   $('exportFill').style.width = '0%';
-  $('exportStatus').textContent = src.kind === 'video' ? 'Rendering… (the clip plays through once)' : 'Rendering…';
+  $('exportStatus').textContent = !image && src.kind === 'video' ? 'Rendering… (the clip plays through once)' : 'Rendering…';
   const controller = new AbortController();
   exportState.controller = controller;
   try {
     const lut = LutParser.parseLut(await api.library.read(entry.id), entry.file);
-    const data = await Exporter.exportBeforeAfter({
+    const common = {
       source: src,
       params: renderParams(),
       lutId: entry.id,
@@ -830,17 +849,29 @@ async function runExport() {
       lutName: entry.name,
       layout,
       beforeRaw: before === 'raw' && !$('exportBeforeField').hidden,
-      length: lengthVal === 'full' ? 'full' : Number(lengthVal),
       labels: $('exportLabels').checked,
-      signal: controller.signal,
-      onProgress: (f) => {
-        $('exportFill').style.width = `${Math.round(f * 100)}%`;
-        $('exportStatus').textContent = `Rendering… ${Math.round(f * 100)}%`;
-      },
-    });
-    exportState.controller = null;
+      watermark: exportState.watermark,
+    };
     const base = (src.kind === 'chart' ? 'Test chart' : src.name).replace(/\.[^.]+$/, '');
-    exportState.rendered = { data, name: `${base} - ${entry.name} before-after.mp4` };
+    const suffix = layout === 'after' ? '' : ' before-after';
+    if (image) {
+      const { data } = await Exporter.exportStill({ ...common, format: exportState.format });
+      $('exportFill').style.width = '100%';
+      const ext = exportState.format === 'jpeg' ? 'jpg' : 'png';
+      exportState.rendered = { data, ext, name: `${base} - ${entry.name}${suffix}.${ext}` };
+    } else {
+      const data = await Exporter.exportBeforeAfter({
+        ...common,
+        length: lengthVal === 'full' ? 'full' : Number(lengthVal),
+        signal: controller.signal,
+        onProgress: (f) => {
+          $('exportFill').style.width = `${Math.round(f * 100)}%`;
+          $('exportStatus').textContent = `Rendering… ${Math.round(f * 100)}%`;
+        },
+      });
+      exportState.rendered = { data, ext: 'mp4', name: `${base} - ${entry.name}${suffix}.mp4` };
+    }
+    exportState.controller = null;
     await saveRendered();
   } catch (err) {
     exportState.controller = null;
@@ -853,19 +884,20 @@ async function runExport() {
 
 // Save the finished video. The render is kept, so a cancelled or failed save can be retried.
 async function saveRendered() {
-  const { data, name } = exportState.rendered;
+  const { data, name, ext } = exportState.rendered;
+  const what = ext === 'mp4' ? 'video' : 'image';
   $('exportStatus').textContent = 'Choose where to save…';
   let saved;
   try {
-    saved = await api.exportVideo.save(data.buffer, name);
+    saved = await api.exportVideo.save(data.buffer, name, ext);
   } catch (err) {
     console.error(err);
-    $('exportStatus').textContent = `Couldn't save the video: ${err.message.replace(/^Error invoking remote method '[^']+': (Error: )?/, '')}`;
+    $('exportStatus').textContent = `Couldn't save the ${what}: ${err.message.replace(/^Error invoking remote method '[^']+': (Error: )?/, '')}`;
     setExportPhase('unsaved');
     return;
   }
   if (!saved) {
-    $('exportStatus').textContent = 'Your video is ready. Save it whenever you like.';
+    $('exportStatus').textContent = `Your ${what} is ready. Save it whenever you like.`;
     setExportPhase('unsaved');
     return;
   }
@@ -882,10 +914,15 @@ async function saveRendered() {
 function bindExport() {
   $('btnExport').addEventListener('click', openExport);
   api.onMenu('export', openExport);
-  for (const id of ['exportLayout', 'exportBefore']) {
+  for (const id of ['exportLayout', 'exportBefore', 'exportKind', 'exportFormat', 'exportWatermark']) {
     $(id).addEventListener('click', (e) => {
       const b = e.target.closest('button');
-      if (b) setSeg(id, b.dataset.v);
+      if (!b) return;
+      setSeg(id, b.dataset.v);
+      if (id === 'exportKind') exportState.kind = b.dataset.v;
+      if (id === 'exportFormat') exportState.format = b.dataset.v;
+      if (id === 'exportWatermark') exportState.watermark = b.dataset.v;
+      updateExportForm();
     });
   }
   $('btnExportCancel').addEventListener('click', closeExport);
@@ -1293,6 +1330,7 @@ async function start() {
 
   bindUpdates();
   bindExport();
+  if (s.exportPrefs) Object.assign(exportState, s.exportPrefs);
   bindBake();
   bindNewsletter(s);
   bindTour(s);

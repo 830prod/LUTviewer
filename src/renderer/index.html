@@ -196,12 +196,29 @@
       <h3 id="exportTitle">Export before / after</h3>
       <p class="sheet-sub" id="exportSub"></p>
       <div id="exportForm">
+        <div class="sheet-row kind-row">
+          <div class="sheet-field">
+            <span class="field-label">Export as</span>
+            <div class="seg" id="exportKind">
+              <button data-v="video">Video</button>
+              <button data-v="image">Image</button>
+            </div>
+          </div>
+          <div class="sheet-field" id="exportFormatField">
+            <span class="field-label">Format</span>
+            <div class="seg" id="exportFormat">
+              <button data-v="png" title="Lossless, best quality">PNG</button>
+              <button data-v="jpeg" title="Smaller file, great for sharing">JPEG</button>
+            </div>
+          </div>
+        </div>
         <div class="sheet-field">
           <span class="field-label">Layout</span>
           <div class="seg layout-seg" id="exportLayout">
             <button data-v="wipe"><i class="lay lay-wipe"></i>Wipe</button>
             <button data-v="split"><i class="lay lay-split"></i>Split</button>
             <button data-v="side"><i class="lay lay-side"></i>Side by side</button>
+            <button data-v="after"><i class="lay lay-after"></i>After only</button>
           </div>
         </div>
         <div class="sheet-field" id="exportBeforeField">
@@ -212,13 +229,20 @@
           </div>
         </div>
         <div class="sheet-row">
-          <label class="sheet-field">
+          <label class="sheet-field" id="exportLengthField">
             <span class="field-label">Length</span>
             <select id="exportLength"></select>
           </label>
           <label class="check"><input type="checkbox" id="exportLabels" checked> Before / After labels</label>
         </div>
-        <p class="hint-line">Your LUTviewer watermark is added to the bottom corner.</p>
+        <div class="sheet-field">
+          <span class="field-label">Watermark</span>
+          <div class="seg wm-seg" id="exportWatermark">
+            <button data-v="full"><i class="wm wm-full"></i>Icon + name</button>
+            <button data-v="icon"><i class="wm wm-icon"></i>Icon only</button>
+            <button data-v="text"><i class="wm wm-text">LUTviewer</i>Name only</button>
+          </div>
+        </div>
       </div>
       <div id="exportProgress" hidden>
         <div class="export-bar"><i id="exportFill"></i></div>
