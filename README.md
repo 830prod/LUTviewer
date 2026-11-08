@@ -143,6 +143,8 @@ Click the **export** button under the preview (or press <kbd>⌘</kbd> <kbd>E</k
 | **Side by side**: the full frame twice | ✓ | ✓ |
 | **After only**: just the graded frame | ✓ | ✓ |
 
+Wipe videos have a **speed** (slow, medium, fast) and a **motion**: a smooth sweep, a pause on each side, or one that lingers on *After* (a quick peek at the original, then mostly your look) or on *Before*.
+
 Pick a **watermark** for the bottom corner: **Icon + name**, the **.lut icon** on its own, or just the **LUTviewer** name. You can also toggle the *Before / After* labels, and for log footage choose whether "before" shows the original log image or the Rec.709 conversion. Videos are H.264 MP4s encoded on your Mac's hardware (choose a length from the playhead, or the whole clip). Images are saved at full resolution.
 
 ## Supported files

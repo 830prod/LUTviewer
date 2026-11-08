@@ -221,6 +221,25 @@
             <button data-v="after"><i class="lay lay-after"></i>After only</button>
           </div>
         </div>
+        <div class="sheet-row wipe-row" id="exportWipeField">
+          <div class="sheet-field">
+            <span class="field-label">Wipe speed</span>
+            <div class="seg small" id="exportWipeSpeed">
+              <button data-v="slow">Slow</button>
+              <button data-v="medium">Medium</button>
+              <button data-v="fast">Fast</button>
+            </div>
+          </div>
+          <label class="sheet-field">
+            <span class="field-label">Wipe motion</span>
+            <select id="exportWipeStyle">
+              <option value="sweep">Smooth sweep</option>
+              <option value="pause">Pause on each side</option>
+              <option value="after">Linger on After</option>
+              <option value="before">Linger on Before</option>
+            </select>
+          </label>
+        </div>
         <div class="sheet-field" id="exportBeforeField">
           <span class="field-label">“Before” shows</span>
           <div class="seg small" id="exportBefore">

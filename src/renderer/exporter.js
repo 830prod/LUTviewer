@@ -11,7 +11,41 @@
   'use strict';
 
   const FPS_STILL = 30;
-  const WIPE_PERIOD = 4; // seconds for one wipe back-and-forth
+  // Wipe motion. The split position is the share of the frame showing BEFORE:
+  // 0.97 ≈ all before, 0.03 ≈ all after. Each style is one loop of segments
+  // [share of the loop, from, to]; a loop starts and ends on the before side.
+  const B = 0.97, A = 0.03;
+  const WIPE_STYLES = {
+    sweep: null, // continuous back-and-forth
+    pause: [[0.2, B, B], [0.3, B, A], [0.2, A, A], [0.3, A, B]],
+    after: [[0.08, B, B], [0.17, B, A], [0.6, A, A], [0.15, A, B]],
+    before: [[0.6, B, B], [0.15, B, A], [0.1, A, A], [0.15, A, B]],
+  };
+  // Seconds per loop for each speed: the sweep is a simple back-and-forth,
+  // the holding styles need a little longer to read.
+  const WIPE_PERIODS = {
+    sweep: { slow: 8, medium: 4, fast: 2.5 },
+    hold: { slow: 10, medium: 6, fast: 4 },
+  };
+  const ease = (x) => (x < 0.5 ? 4 * x * x * x : 1 - Math.pow(-2 * x + 2, 3) / 2);
+
+  function wipePeriod(style = 'sweep', speed = 'medium') {
+    const table = style === 'sweep' ? WIPE_PERIODS.sweep : WIPE_PERIODS.hold;
+    return table[speed] || table.medium;
+  }
+
+  function wipePosition(t, style = 'sweep', speed = 'medium') {
+    const period = wipePeriod(style, speed);
+    const phase = (t % period) / period;
+    const segments = WIPE_STYLES[style];
+    if (!segments) return 0.5 + 0.47 * Math.cos(2 * Math.PI * phase);
+    let start = 0;
+    for (const [share, from, to] of segments) {
+      if (phase <= start + share) return from + (to - from) * ease((phase - start) / share);
+      start += share;
+    }
+    return B;
+  }
 
   const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
   const even = (n) => Math.max(2, Math.round(n / 2) * 2);
@@ -142,7 +176,7 @@
       } else if (layout === 'after') {
         r.render({ ...p, split: -1 });
       } else {
-        const pos = layout === 'wipe' ? 0.5 - 0.4 * Math.cos((2 * Math.PI * t) / WIPE_PERIOD) : 0.5;
+        const pos = layout === 'wipe' ? wipePosition(t, opts.wipeStyle, opts.wipeSpeed) : 0.5;
         r.render({ ...p, split: pos });
       }
       ctx.drawImage(glCanvas, 0, 0);
@@ -310,5 +344,5 @@
     }
   }
 
-  root.Exporter = { exportBeforeAfter, exportStill };
+  root.Exporter = { exportBeforeAfter, exportStill, wipePosition, wipePeriod };
 })(window);

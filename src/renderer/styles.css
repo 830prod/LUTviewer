@@ -383,3 +383,7 @@ details.library #search { flex: 1; width: auto; }
 .wm-icon::after { width: 11px; height: 11px; background: url(lutv://assets/app-icon.png) center / contain no-repeat; }
 .wm-text { font-size: 6px; font-weight: 700; color: #fff; text-align: right; line-height: 30px; padding-right: 5px; letter-spacing: 0; }
 .wm-text::after { display: none; }
+
+.wipe-row { align-items: flex-end; }
+.wipe-row .sheet-field { margin-bottom: 14px; }
+.wipe-row .sheet-field:first-child { flex: none; min-width: 0; }

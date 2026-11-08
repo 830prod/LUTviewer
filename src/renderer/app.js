@@ -754,7 +754,7 @@ function bindUpdates() {
 }
 
 // ---------- Before / after export ----------
-const exportState = { controller: null, savedPath: null, phase: 'form', kind: 'video', format: 'png', watermark: 'full' };
+const exportState = { controller: null, savedPath: null, phase: 'form', kind: 'video', format: 'png', watermark: 'full', wipeSpeed: 'medium', wipeStyle: 'sweep' };
 const segValue = (id, fallback) => [...$(id).children].find((b) => b.classList.contains('on'))?.dataset.v || fallback;
 
 // Show only the options that apply to a video or an image export.
@@ -765,13 +765,14 @@ function updateExportForm() {
   const wipe = $('exportLayout').querySelector('[data-v="wipe"]');
   wipe.hidden = image;
   if (image && segValue('exportLayout', 'wipe') === 'wipe') setSeg('exportLayout', 'split');
+  $('exportWipeField').hidden = image || segValue('exportLayout', 'wipe') !== 'wipe';
   $('exportTitle').textContent = image ? 'Export image' : 'Export video';
   if (exportState.phase === 'form') $('btnExportGo').textContent = image ? 'Export image' : 'Export video';
 }
 
 function exportLengths() {
   const src = state.source;
-  if (src.kind !== 'video') return { options: [[4, '4 seconds'], [8, '8 seconds'], [12, '12 seconds']], def: 8 };
+  if (src.kind !== 'video') return { options: [[4, '4 seconds'], [8, '8 seconds'], [12, '12 seconds'], [16, '16 seconds']], def: 8 };
   const d = src.el.duration || 0;
   const opts = [5, 10, 15, 30].filter((n) => n < d - 0.5).map((n) => [n, `${n} seconds from the playhead`]);
   opts.push(['full', `Whole clip (${fmtTime(d)})`]);
@@ -803,6 +804,8 @@ function openExport() {
   setSeg('exportKind', exportState.kind);
   setSeg('exportFormat', exportState.format);
   setSeg('exportWatermark', exportState.watermark);
+  setSeg('exportWipeSpeed', exportState.wipeSpeed);
+  $('exportWipeStyle').value = exportState.wipeStyle;
   const { options, def } = exportLengths();
   const sel = $('exportLength');
   sel.textContent = '';
@@ -832,7 +835,8 @@ async function runExport() {
   const image = exportState.kind === 'image';
   exportState.layout = layout;
   exportState.before = before;
-  saveSettings({ exportPrefs: { kind: exportState.kind, format: exportState.format, watermark: exportState.watermark, layout, before } });
+  exportState.wipeStyle = $('exportWipeStyle').value;
+  saveSettings({ exportPrefs: { kind: exportState.kind, format: exportState.format, watermark: exportState.watermark, wipeSpeed: exportState.wipeSpeed, wipeStyle: exportState.wipeStyle, layout, before } });
   const lengthVal = $('exportLength').value;
   setExportPhase('running');
   $('exportFill').style.width = '0%';
@@ -851,6 +855,8 @@ async function runExport() {
       beforeRaw: before === 'raw' && !$('exportBeforeField').hidden,
       labels: $('exportLabels').checked,
       watermark: exportState.watermark,
+      wipeSpeed: exportState.wipeSpeed,
+      wipeStyle: exportState.wipeStyle,
     };
     const base = (src.kind === 'chart' ? 'Test chart' : src.name).replace(/\.[^.]+$/, '');
     const suffix = layout === 'after' ? '' : ' before-after';
@@ -914,7 +920,7 @@ async function saveRendered() {
 function bindExport() {
   $('btnExport').addEventListener('click', openExport);
   api.onMenu('export', openExport);
-  for (const id of ['exportLayout', 'exportBefore', 'exportKind', 'exportFormat', 'exportWatermark']) {
+  for (const id of ['exportLayout', 'exportBefore', 'exportKind', 'exportFormat', 'exportWatermark', 'exportWipeSpeed']) {
     $(id).addEventListener('click', (e) => {
       const b = e.target.closest('button');
       if (!b) return;
@@ -922,6 +928,7 @@ function bindExport() {
       if (id === 'exportKind') exportState.kind = b.dataset.v;
       if (id === 'exportFormat') exportState.format = b.dataset.v;
       if (id === 'exportWatermark') exportState.watermark = b.dataset.v;
+      if (id === 'exportWipeSpeed') exportState.wipeSpeed = b.dataset.v;
       updateExportForm();
     });
   }
