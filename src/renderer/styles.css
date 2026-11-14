@@ -10,8 +10,36 @@
   --line: rgba(154, 187, 212, 0.16);
   --line-strong: rgba(154, 187, 212, 0.32);
   --muted: rgba(233, 245, 253, 0.6);
+  --gold: #F4C76B;
+  --danger: #FF9C8F;
+  --hover: rgba(233, 245, 253, 0.08);
   --radius: 10px;
   color-scheme: dark;
+}
+
+/* Light appearance (View → Appearance, or follows macOS when set to System). */
+@media (prefers-color-scheme: light) {
+  :root {
+    --ink-0: #F2F6F9;
+    --ink-1: #FFFFFF;
+    --ink-2: #E6EDF3;
+    --ink-3: #C6D5E2;
+    --steel: #4F7C9C;
+    --mist: #3D6786;
+    --ice: #0B2236;
+    --line: rgba(11, 34, 54, 0.11);
+    --line-strong: rgba(11, 34, 54, 0.22);
+    --muted: rgba(11, 34, 54, 0.6);
+    --gold: #A86A12;
+    --danger: #C2412F;
+    --hover: rgba(11, 34, 54, 0.06);
+    color-scheme: light;
+  }
+  .mark { background-image: url(lutv://assets/app-icon-dark.png) !important; }
+  /* Reel's speech bubble keeps its usual light-on-dark styling. */
+  .tour-bubble { --ice: #E9F5FD; --ink-0: #021C30; --ink-2: #14374F; }
+  .card .star { text-shadow: none; }
+  .stage { box-shadow: 0 0 0 1px var(--line-strong); }
 }
 
 * { box-sizing: border-box; }
@@ -49,8 +77,8 @@ svg { width: 18px; height: 18px; fill: none; stroke: currentColor; stroke-width:
 .icon-btn:disabled { opacity: 0.35; cursor: default; }
 .icon-btn.on { color: var(--ice); background: var(--ink-3); }
 .icon-btn.on svg { fill: currentColor; }
-#btnFav.on, #btnFavFilter.on { background: none; color: #F4C76B; }
-#btnFav.on svg, #btnFavFilter.on svg { fill: #F4C76B; stroke: #F4C76B; }
+#btnFav.on, #btnFavFilter.on { background: none; color: var(--gold); }
+#btnFav.on svg, #btnFavFilter.on svg { fill: var(--gold); stroke: var(--gold); }
 .icon-btn:focus-visible, .btn:focus-visible, .seg button:focus-visible, .card:focus-visible { outline: 2px solid var(--mist); outline-offset: 1px; }
 
 main { flex: 1; overflow-y: auto; overflow-x: hidden; display: flex; flex-direction: column; }
@@ -145,7 +173,7 @@ select {
 .card .name { flex: 1; min-width: 0; font-size: 11px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; outline: none; }
 .card .name[contenteditable=true] { background: var(--ink-0); -webkit-user-select: text; text-overflow: clip; border-radius: 3px; padding: 0 2px; }
 .card .tag { font-size: 9px; padding: 0 4px; border-radius: 3px; background: var(--ink-3); color: var(--ice); letter-spacing: 0.04em; }
-.card .star { position: absolute; top: 5px; right: 6px; color: #F4C76B; font-size: 12px; text-shadow: 0 1px 2px rgba(0,0,0,.6); }
+.card .star { position: absolute; top: 5px; right: 6px; color: var(--gold); font-size: 12px; text-shadow: 0 1px 2px rgba(0,0,0,.6); }
 .card.none canvas { background: var(--ink-2); }
 
 .lib-empty {
@@ -174,7 +202,7 @@ select {
 }
 .menu button { display: block; width: 100%; text-align: left; border: 0; background: none; padding: 6px 10px; border-radius: 5px; cursor: pointer; font-size: 12px; }
 .menu button:hover { background: var(--ink-3); }
-.menu .danger { color: #FF9C8F; }
+.menu .danger { color: var(--danger); }
 
 /* ---------- Update banner ---------- */
 .update-bar {
@@ -193,7 +221,7 @@ select {
 .update-actions { display: flex; align-items: center; gap: 4px; flex: none; }
 .btn.small { padding: 5px 12px; font-size: 12px; }
 .link-btn { border: 0; background: none; color: var(--mist); font-size: 12px; padding: 5px 6px; cursor: pointer; border-radius: 6px; }
-.link-btn:hover { color: var(--ice); background: rgba(233, 245, 253, 0.08); }
+.link-btn:hover { color: var(--ice); background: var(--hover); }
 
 /* ---------- Export sheet ---------- */
 .sheet-backdrop { position: fixed; inset: 0; z-index: 60; background: rgba(1, 12, 22, 0.66); display: flex; align-items: flex-start; justify-content: center; padding: 64px 12px 12px; backdrop-filter: blur(3px); }
@@ -232,7 +260,7 @@ select {
 .rate-close:hover { color: var(--ice); }
 .stars { display: flex; justify-content: center; gap: 4px; margin: 2px 0 6px; }
 .stars button { border: 0; background: none; font-size: 30px; line-height: 1; padding: 2px 3px; color: var(--ink-3); cursor: pointer; transition: transform .1s, color .1s; }
-.stars button.lit { color: #F4C76B; }
+.stars button.lit { color: var(--gold); }
 .stars button:hover { transform: scale(1.15); }
 .rate-links { display: flex; justify-content: center; gap: 6px; flex-wrap: wrap; }
 .rate-links .btn { padding: 6px 12px; font-size: 12px; }
@@ -246,7 +274,7 @@ details.section > summary::-webkit-details-marker { display: none; }
 details.section > summary:focus-visible { outline: 2px solid var(--mist); outline-offset: 4px; border-radius: 4px; }
 .sec-title { font-size: 11px; font-weight: 600; letter-spacing: 0.12em; text-transform: uppercase; color: var(--mist); flex: none; }
 .sec-meta { flex: 1; min-width: 0; text-align: right; font-size: 12px; color: var(--muted); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-.sec-meta.changed { color: #F4C76B; }
+.sec-meta.changed { color: var(--gold); }
 .chev { width: 16px; height: 16px; flex: none; color: var(--mist); transition: transform 0.2s ease; transform: rotate(-90deg); }
 details.section[open] > summary .chev { transform: rotate(0deg); }
 details.section > summary:hover .sec-title, details.section > summary:hover .chev { color: var(--ice); }
@@ -259,7 +287,7 @@ details.section > summary:hover .sec-title, details.section > summary:hover .che
 .slider.adj { width: 100%; min-width: 0; margin: 2px 0; }
 .slider.adj > span { width: 74px; flex: none; color: var(--ice); font-size: 12px; }
 .slider.adj output { width: 40px; }
-.slider.adj.changed > span { color: #F4C76B; }
+.slider.adj.changed > span { color: var(--gold); }
 #temperature::-webkit-slider-runnable-track { background: linear-gradient(90deg, #5D8FD6, var(--ink-3) 50%, #E3A04F); }
 #tint::-webkit-slider-runnable-track { background: linear-gradient(90deg, #5FB872, var(--ink-3) 50%, #C26BC2); }
 .adj-group-label { font-size: 10px; letter-spacing: 0.12em; text-transform: uppercase; color: var(--muted); margin: 10px 0 4px; }
@@ -292,7 +320,7 @@ details.library #search { flex: 1; width: auto; }
 .bake-ok { margin: 0 0 10px; font-size: 13px; font-weight: 600; }
 .steps-list { margin: 0; padding-left: 20px; font-size: 12px; line-height: 1.5; color: var(--ice); }
 .steps-list li { margin-bottom: 6px; }
-.steps-list b { color: #F4C76B; font-weight: 600; }
+.steps-list b { color: var(--gold); font-weight: 600; }
 .steps-list .tip { color: var(--muted); }
 
 /* ---------- Guided tour (Reel) ---------- */
@@ -367,7 +395,7 @@ details.library #search { flex: 1; width: auto; }
 #newsName { flex: 0.7; }
 #newsEmail { flex: 1.3; }
 .news-form .btn { flex: none; }
-.news-error { color: #FF9C8F !important; }
+.news-error { color: var(--danger) !important; }
 .news-card .rate-links { justify-content: flex-start; }
 .tip-link { display: inline-flex; align-items: center; gap: 4px; }
 
@@ -387,3 +415,10 @@ details.library #search { flex: 1; width: auto; }
 .wipe-row { align-items: flex-end; }
 .wipe-row .sheet-field { margin-bottom: 14px; }
 .wipe-row .sheet-field:first-child { flex: none; min-width: 0; }
+
+/* Appearance toggle: sun in dark mode (switch to light), moon in light mode. */
+#btnTheme .i-moon { display: none; }
+@media (prefers-color-scheme: light) {
+  #btnTheme .i-sun { display: none; }
+  #btnTheme .i-moon { display: block; }
+}

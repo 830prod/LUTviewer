@@ -43,6 +43,7 @@ Shooting log? Tell LUTviewer your camera and it converts the footage to Rec.709 
 
 - 🎞 **Every LUT at once.** A live thumbnail grid shows each LUT in your library on the current frame, and it updates as you scrub.
 - 📷 **Log → Rec.709 built in.** Pick your camera and LUTviewer handles the conversion. No conversion LUTs to hunt down.
+- 🌗 **Light & dark mode.** Match macOS, or pick Light or Dark. The whole app and its Dock icon switch together (sun / moon button in the title bar, or *View → Appearance*).
 - 🧭 **Side panel.** Docks to the edge of your screen and can float above Premiere, Resolve or Final Cut.
 - 📂 **Drag & drop everything.** Drop in `.cube` / `.3dl` files or whole LUT-pack folders once and they're saved in your library. Drop footage on the window, the Dock icon, or use **Open With**.
 - ↔️ **Before / after split.** Drag the wipe across the frame, or hold <kbd>\\</kbd> to see the image without the LUT.
@@ -111,6 +112,7 @@ LUTviewer guesses the type from the file name (anything mentioning S-Log, C-Log,
 | <kbd>⇧</kbd> <kbd>⌘</kbd> <kbd>E</kbd> | Export LUT for Premiere / Final Cut |
 | <kbd>⇧</kbd> <kbd>⌘</kbd> <kbd>L</kbd> | Add LUTs |
 | <kbd>⇧</kbd> <kbd>⌘</kbd> <kbd>D</kbd> | Dock window to the right edge |
+| <kbd>⇧</kbd> <kbd>⌘</kbd> <kbd>A</kbd> | Toggle light / dark appearance |
 
 ## Export a LUT for Premiere Pro or Final Cut Pro
 

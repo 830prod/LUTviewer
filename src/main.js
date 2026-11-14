@@ -129,6 +129,28 @@ function mediaUrl(filePath) {
 }
 
 // ---------- Dock icon follows the system appearance ----------
+// ---------- Appearance (System / Light / Dark) ----------
+// nativeTheme.themeSource drives the Dock icon, the window chrome and the
+// interface (via prefers-color-scheme), so one setting switches everything.
+const APPEARANCES = ['system', 'light', 'dark'];
+const windowBg = () => (nativeTheme.shouldUseDarkColors ? '#021C30' : '#F2F6F9');
+
+function setAppearance(mode) {
+  if (!APPEARANCES.includes(mode)) mode = 'system';
+  nativeTheme.themeSource = mode;
+  getSettings().appearance = mode;
+  saveSettings();
+  buildMenu();
+}
+
+function onThemeUpdated() {
+  updateDockIcon();
+  if (mainWin && !mainWin.isDestroyed()) mainWin.setBackgroundColor(windowBg());
+  if (mainWin && !mainWin.isDestroyed()) {
+    mainWin.webContents.send('appearance:changed', { mode: nativeTheme.themeSource, dark: nativeTheme.shouldUseDarkColors });
+  }
+}
+
 function updateDockIcon() {
   if (!app.dock) return;
   app.dock.setIcon(path.join(ASSETS_DIR, nativeTheme.shouldUseDarkColors ? 'icon-dark.png' : 'icon-light.png'));
@@ -239,7 +261,7 @@ function createMain() {
   mainWin = new BrowserWindow({
     ...bounds, minWidth: 360, minHeight: 560, show: false,
     titleBarStyle: 'hiddenInset', trafficLightPosition: { x: 14, y: 14 },
-    backgroundColor: '#021C30', alwaysOnTop: !!s.pinned,
+    backgroundColor: windowBg(), alwaysOnTop: !!s.pinned,
     webPreferences: { preload: path.join(__dirname, 'preload.js'), contextIsolation: true, sandbox: true },
   });
   if (s.pinned) mainWin.setAlwaysOnTop(true, 'floating');
@@ -451,6 +473,8 @@ function registerIpc() {
   ipcMain.handle('app:version', () => app.getVersion());
 
   ipcMain.handle('rating:send', (_e, stars) => sendRating(stars));
+  ipcMain.handle('appearance:get', () => ({ mode: nativeTheme.themeSource, dark: nativeTheme.shouldUseDarkColors }));
+  ipcMain.handle('appearance:set', (_e, mode) => { setAppearance(mode); return { mode: nativeTheme.themeSource, dark: nativeTheme.shouldUseDarkColors }; });
   ipcMain.handle('support:config', () => ({ tip: /^https:\/\/(buy|donate)\.stripe\.com\//.test(support.tipUrl) }));
   ipcMain.handle('support:tip', () => openTip());
   ipcMain.handle('newsletter:subscribe', (_e, email, name) => subscribe(email, name));
@@ -570,6 +594,19 @@ function buildMenu() {
     {
       label: 'View',
       submenu: [
+        {
+          label: 'Appearance',
+          submenu: [
+            { label: 'Match System', value: 'system' },
+            { label: 'Light', value: 'light' },
+            { label: 'Dark', value: 'dark' },
+          ].map(({ label, value }) => ({
+            label, type: 'radio', checked: (getSettings().appearance || 'system') === value,
+            click: () => setAppearance(value),
+          })),
+        },
+        { label: 'Toggle Light / Dark', accelerator: 'CmdOrCtrl+Shift+A', click: () => setAppearance(nativeTheme.shouldUseDarkColors ? 'light' : 'dark') },
+        { type: 'separator' },
         { label: 'Dock to Right Edge', accelerator: 'CmdOrCtrl+Shift+D', click: () => mainWin && mainWin.setBounds(sideBounds(mainWin.getBounds().width), true) },
         { type: 'separator' },
         { role: 'reload' }, { role: 'toggleDevTools' }, { type: 'separator' }, { role: 'togglefullscreen' },
@@ -601,8 +638,9 @@ app.whenReady().then(() => {
   registerIpc();
   updater.init({ getWindow: () => mainWin, getSettings, saveSettings });
   buildMenu();
+  nativeTheme.themeSource = APPEARANCES.includes(getSettings().appearance) ? getSettings().appearance : 'system';
   updateDockIcon();
-  nativeTheme.on('updated', updateDockIcon);
+  nativeTheme.on('updated', onThemeUpdated);
   createSplash();
   createMain();
   app.on('activate', () => { if (!mainWin) createMain(); });

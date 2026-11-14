@@ -38,6 +38,11 @@ contextBridge.exposeInMainWorld('lutviewer', {
   ready: () => ipcRenderer.send('app:ready'),
   onOpenPaths: on('app:open-paths'),
   onShown: on('app:shown'),
+  appearance: {
+    get: () => ipcRenderer.invoke('appearance:get'),
+    set: (mode) => ipcRenderer.invoke('appearance:set', mode),
+    onChange: on('appearance:changed'),
+  },
   onSplashProgress: on('splash:progress'),
   onMenu: (name, fn) => on(`menu:${name}`)(fn),
   update: {

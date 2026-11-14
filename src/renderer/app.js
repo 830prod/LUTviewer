@@ -488,6 +488,12 @@ function bindControls() {
     toast(on ? 'LUTviewer stays on top of other windows' : 'LUTviewer no longer stays on top', 2000);
   });
   $('btnDock').addEventListener('click', () => api.win.dock());
+  $('btnTheme').addEventListener('click', async () => {
+    const { dark } = await api.appearance.get();
+    const now = await api.appearance.set(dark ? 'light' : 'dark');
+    $('btnTheme').title = `Switch to ${now.dark ? 'light' : 'dark'} appearance (⇧⌘A). View → Appearance has Match System.`;
+    refreshThumbs();
+  });
 
   // Split wipe
   $('btnSplit').addEventListener('click', () => toggleSplit());
